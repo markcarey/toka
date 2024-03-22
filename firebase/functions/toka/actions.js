@@ -132,7 +132,7 @@ module.exports = {
             minterAddress = req.body.untrustedData.address;
           }
 
-          if (state.contractTye == "ERC721") {
+          if (state.contractType == "ERC721") {
             const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
             // calldata for a mint tx
             const feeHex = state.feeHex;
