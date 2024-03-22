@@ -11,6 +11,7 @@ var addr = {};
 addr.degen = "0xCAd106ec4a3d792008ff113C8BaCb384f1b84046";
 addr.degenerativeArt = "0x4578F0CB63599699DDBDa70760c6BBEc9e88A89E"; // Base, Zora1155
 addr.zoraFactory = "0x777777C338d93e2C7adf08D102d45CA7CC4Ed021";
+addr.mintWithDegen = "0xf3dB11Aeb6dCA548C946A7f9967CE51D67282C14";
 
 // supportsInterface('0x80ac58cd') // ERC721
 // supportsInterface('0xd9b67a26') // ERC1155
@@ -19,6 +20,7 @@ addr.zoraFactory = "0x777777C338d93e2C7adf08D102d45CA7CC4Ed021";
 //const degenJSON = require("../artifacts/contracts/MockDegen.sol/MockDegen.json");
 const zora1155JSON = require("./abis/Zora1155.json");
 const zoraFactoryJSON = require("./abis/ZoraFactory.json");
+const mintWithDegenJSON = require("../artifacts/contracts/MintWithDegen.sol/MintWithDegen.json");
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, ethers.provider);
 //const degen = new ethers.Contract(addr.degen, degenJSON.abi, signer);
 const da = new ethers.Contract(addr.degenerativeArt, zora1155JSON.abi, signer);
