@@ -25,6 +25,7 @@ const signer = new ethers.Wallet(process.env.PRIVATE_KEY, ethers.provider);
 //const degen = new ethers.Contract(addr.degen, degenJSON.abi, signer);
 const da = new ethers.Contract(addr.degenerativeArt, zora1155JSON.abi, signer);
 const zoraFactory = new ethers.Contract(addr.zoraFactory, zoraFactoryJSON.abi, signer);
+const mwd = new ethers.Contract(addr.mintWithDegen, mintWithDegenJSON.abi, signer);
 
 async function getGasPrices() {
   console.log("start getGasPrices");
