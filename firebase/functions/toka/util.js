@@ -265,6 +265,7 @@ module.exports = {
 
     "frameHTML": async function(frame) {
         console.log("build html for frame", JSON.stringify(frame));
+        const util = module.exports;
         return new Promise(async function(resolve, reject) { 
             var html = '';
             var h1 = `https://toka.lol/frames/${frame.id}`;
