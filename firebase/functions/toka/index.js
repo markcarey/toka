@@ -43,6 +43,21 @@ module.exports.cron = async function(context) {
   return 1;
 } // cron
 
+module.exports.pinataAnalytics = async function(message) {
+    // TODO: send to pinata
+    console.log("pinataAnalytics", JSON.stringify(message));
+    const options = {
+        method: 'POST',
+        headers: {Authorization: `Bearer ${process.env.PINATA_AUTH_TOKEN}`, 'Content-Type': 'application/json'},
+        body: JSON.stringify({message: message})
+    };
+    
+    return fetch('https://api.pinata.cloud/farcaster/frames/interactions', options)
+    .then(response => response.json())
+    .then(response => console.log(response))
+    .catch(err => console.error(err));
+} // pinataAnalytics
+
 api.use(cors({ origin: true })); // enable origin cors
 
 api.get(['/frames/:id', '/frames/:id/:cachebuster'], async function (req, res) {

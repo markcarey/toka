@@ -40,6 +40,7 @@ module.exports = {
 
   "mint": async function(req) {
     return new Promise(async function(resolve, reject) {
+      util.logFrame({"custom_id": "mint", "frame_id": "mint", "data": req.body});
       var frame = {};
       frame.id = req.params.id;
       frame.square = true;

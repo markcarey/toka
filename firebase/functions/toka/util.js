@@ -18,6 +18,8 @@ const Jimp = require('jimp');
 const { Readable } = require('stream');
 var FormData = require('form-data');
 
+const {PubSub} = require("@google-cloud/pubsub");
+const pubsub = new PubSub();
 
 const degenJSON = require(__base + 'toka/abis/DEGEN.json');
 const zora721JSON = require(__base + 'toka/abis/ERC721Drop.json');
@@ -337,6 +339,15 @@ module.exports = {
             //console.log("html", html);
             return resolve(html);
         }); // return new Promise
-    } // frameHTML
+    }, // frameHTML
+
+    "logFrame": async function(data) {
+        return new Promise(async function(resolve, reject) {
+            const topic = pubsub.topic('log-frame');
+            const messageBody = JSON.stringify(data);
+            const buffer = Buffer.from(messageBody);
+            return topic.publishMessage({"data": buffer});
+        }); // return new Promise
+    }, // logFrame
 
 }; // module.exports
