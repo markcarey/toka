@@ -45,11 +45,14 @@ module.exports.cron = async function(context) {
 
 module.exports.pinataAnalytics = async function(message) {
     // TODO: send to pinata
-    console.log("pinataAnalytics", JSON.stringify(message));
+    console.log("PA: pinataAnalytics message", JSON.stringify(message));
+    // Decode the PubSub Message body.
+    const messageBody = message.data ? Buffer.from(message.data, 'base64').toString() : null;
+    console.log("PA: messageBody", JSON.stringify(messageBody));
     const options = {
         method: 'POST',
         headers: {Authorization: `Bearer ${process.env.PINATA_AUTH_TOKEN}`, 'Content-Type': 'application/json'},
-        body: JSON.stringify({message: message})
+        body: JSON.stringify(message.json)
     };
     
     return fetch('https://api.pinata.cloud/farcaster/frames/interactions', options)
