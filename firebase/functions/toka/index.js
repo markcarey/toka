@@ -74,7 +74,7 @@ api.post(['/collect/base[:]:address/:tokenId/:extra', '/collect/base[:]:address/
   return res.end(html);
 }); // POST /frames/:id
 
-api.get('/collect/base[:]:address/:tokenId/:extra', async function (req, res) {
+api.get(['/collect/base[:]:address/:tokenId/:extra', '/collect/base[:]:address/:tokenId', '/collect/base[:]:address'], async function (req, res) {
     console.log("start GET /collect with path", req.path);
     const frame = frames.mint(req);
     const html = await util.frameHTML(frame);
@@ -82,7 +82,7 @@ api.get('/collect/base[:]:address/:tokenId/:extra', async function (req, res) {
     res.set('Cache-Control', 'public, max-age=60, s-maxage=120');
     //res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
     res.writeHead(200, {
-    'Content-Type': 'text/html; charset=utf-8',
+        'Content-Type': 'text/html; charset=utf-8',
     });
     return res.end(html);
 }); // GET /api/collect

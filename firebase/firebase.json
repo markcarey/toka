@@ -26,6 +26,10 @@
       {
         "source": "/api/**",
         "function": "api"
+      },
+      {
+        "source": "/collect/**",
+        "function": "api"
       }
     ]
   },

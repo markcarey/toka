@@ -14,7 +14,6 @@ registerFont("Impact.ttf", {family: "Impact"}); // register font
 registerFont("Inter-Bold.ttf", {family: "Inter"}); // register font
 registerFont("SartoshiScript-Regular.otf", {family: "Sartoshi"}); // register font
 
-const { parse } = require('node-html-parser');
 const Jimp = require('jimp');
 const { Readable } = require('stream');
 var FormData = require('form-data');
