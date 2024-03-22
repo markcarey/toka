@@ -103,7 +103,7 @@ module.exports = {
           {
             "label": `Mint (${priceEther} ETH)`,
             "action": "tx",
-            "target": `https://toka.lol/frames/${req.params.id}`
+            "target": `https://toka.lol/collect/base:${state.contractAddress}`
           }
         ];
         frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}`;
@@ -113,6 +113,7 @@ module.exports = {
         if ("transactionId" in req.body.untrustedData) {
           // transaction completed
           const txnId = req.body.untrustedData.transactionId;
+          // TODO: nicer image / message
           frame.imageText = `Your txId is ${txnId}`;
           frame.buttons = [
             {

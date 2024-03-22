@@ -13,6 +13,7 @@
   },
   "main": "index.js",
   "dependencies": {
+    "@google-cloud/pubsub": "^4.3.3",
     "@xmtp/frames-validator": "^0.5.2",
     "canvas": "^2.11.2",
     "cheerio": "^1.0.0-rc.12",

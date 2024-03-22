@@ -12,3 +12,7 @@ var toka = require(__base + 'toka');
 exports.api = functions.https.onRequest((req, res) => {
    return toka.api(req, res);
 });
+
+exports.pinataAnalytics = functions.pubsub.topic('log-frame').onPublish((message) => {
+    return toka.pinataAnalytics(message);
+});
