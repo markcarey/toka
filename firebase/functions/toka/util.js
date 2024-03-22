@@ -66,7 +66,7 @@ module.exports = {
                 const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
 
                 const feeData = await zora721.zoraFeeForAmount(1);
-                const fee = feeData.fee;
+                var fee = feeData.fee;
                 console.log("fee", fee);
                 //now get price
                 const salesConfig = await zora721.salesConfig();
