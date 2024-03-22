@@ -1,9 +1,14 @@
-const functions = require("firebase-functions");
+global.__base = __dirname + '/';
 
-// // Create and deploy your first functions
-// // https://firebase.google.com/docs/functions/get-started
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+var functions = require('firebase-functions');
+var firebase = require('firebase-admin');
+
+if (!firebase.apps.length) {
+  firebase.initializeApp();
+}
+
+var toka = require(__base + 'toka');
+
+exports.api = functions.https.onRequest((req, res) => {
+   return toka.api(req, res);
+});
