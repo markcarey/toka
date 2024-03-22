@@ -17,6 +17,7 @@
     "@openzeppelin/contracts": "^4.7.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.2",
     "@zoralabs/zora-1155-contracts": "^2.7.3",
+    "@zoralabs/zora-721-contracts": "^1.15.3",
     "chai": "^4.3.6",
     "dotenv": "^16.0.2",
     "ethers": "^5.5.4",
