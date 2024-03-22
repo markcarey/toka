@@ -3,7 +3,7 @@
 pragma solidity ^0.8.17;
 
 import "./interfaces/IZoraCreatorFixedPriceSaleStrategy.sol";
-import "./interfaces/IZoraCreatorMerkleMinterStrategy.sol";
+//import "./interfaces/IZoraCreatorMerkleMinterStrategy.sol";
 import "./interfaces/IZoraCreator1155.sol";
 import "./interfaces/IERC721Drop.sol";
 //import {IZoraCreator1155Factory} from "@zoralabs/zora-1155-contracts/src/interfaces/IZoraCreator1155Factory.sol";
@@ -18,17 +18,17 @@ contract MintWithDegen is AccessControl {
     // zora factory address TODO: do we need the factory?
     //IZoraCreator1155Factory public _zoraFactory = IZoraCreator1155Factory(0x777777C338d93e2C7adf08D102d45CA7CC4Ed021);
     IZoraCreatorFixedPriceSaleStrategy public _fixedPriceSaleStrategy;
-    IZoraCreatorMerkleMinterStrategy public _merkleMinterStrategy;
+    //IZoraCreatorMerkleMinterStrategy public _merkleMinterStrategy;
     uint256 public _mintFee; // mint fee in degen
     uint256 public _tokaFee; // toka's take in degen
 
     // degen price per token per contract address: contract => tokenId => price
     mapping(address => mapping(uint256 => uint256)) public _degenPricePerToken;
 
-    constructor(IERC20 degen, IZoraCreatorFixedPriceSaleStrategy fixedPriceSaleStrategy, IZoraCreatorMerkleMinterStrategy merkleMinterStrategy, uint256 mintFee, uint256 tokaFee) {
+    constructor(IERC20 degen, IZoraCreatorFixedPriceSaleStrategy fixedPriceSaleStrategy, uint256 mintFee, uint256 tokaFee) {
         _degen = degen;
         _fixedPriceSaleStrategy = fixedPriceSaleStrategy;
-        _merkleMinterStrategy = merkleMinterStrategy;
+        //_merkleMinterStrategy = merkleMinterStrategy;
         _mintFee = mintFee;
         _tokaFee = tokaFee;
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -83,6 +83,15 @@ contract MintWithDegen is AccessControl {
         require(hasRole(MANAGER_ROLE, msg.sender), "Not manager");
         _degen.transfer(msg.sender, _degen.balanceOf(address(this)));
     }
+
+    // withdraw eth function for toka admin
+    function withdrawEth() public {
+        require(hasRole(MANAGER_ROLE, msg.sender), "Not manager");
+        payable(msg.sender).transfer(address(this).balance);
+    }
+
+    // default payable function
+    receive() external payable {}
 
 }
 
