@@ -21,14 +21,28 @@ module.exports = {
             }
           }
     
-          const contractAddress = "0xae563f1AD15a52A043989c8c31f2ebD621272411"; // TODO: update this
-    
+          var contractAddress = "0xae563f1AD15a52A043989c8c31f2ebD621272411"; // default
           var state;
+    
+          if (req.params.session) {
+            console.log("req.params.session", req.params.session);
+            if (req.params.session == "1") {
+              // no-op
+            } else {
+              // does it seem like a contract address?
+              if (req.params.session.length == 42) {
+                contractAddress = req.params.session;
+              }
+            }
+          }
+    
+          
           if ("state" in req.body.untrustedData) {
             state = JSON.parse(decodeURIComponent(req.body.untrustedData.state));
           } else {
             state = {
-              "method": "start"
+              "method": "start",
+              "contractAddress": contractAddress
             };
           }
           console.log("state", state);
@@ -42,7 +56,9 @@ module.exports = {
                 "target": `https://frm.lol/frames/${req.params.id}`
               }
             ];
-            frame.image = `https://frm.lol/api/contract/images/base/${contractAddress}`
+            frame.image = `https://frm.lol/api/contract/images/base/${state.contractAddress}`
+            frame.postUrl = `https://frm.lol/frames/${req.params.id}/${state.contractAddress}`;
+            state.contractAddress = contractAddress;
             state.method = "mint";
           } else if (state.method == "mint") {
             if ("transactionId" in req.body.untrustedData) {
@@ -63,14 +79,15 @@ module.exports = {
     
               // is contract ERC721 or ERC1155?
               const abi = [ "function supportsInterface(bytes4 interfaceId) external view returns (bool)" ];
-              const c = new ethers.Contract(contractAddress, abi, provider);
+              console.log("contractAddress b4 supportsInterface", contractAddress);
+              const c = new ethers.Contract(state.contractAddress, abi, provider);
               const is721 = await c.supportsInterface("0x80ac58cd");
               console.log("is721", is721);
               const is1155 = await c.supportsInterface("0xd9b67a26");
               console.log("is1155", is1155);
     
               if (is721) {
-                const zora721 = new ethers.Contract(contractAddress, zora721JSON.abi, provider);
+                const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
     
                 const feeData = await zora721.zoraFeeForAmount(1);
                 const fee = feeData.fee;
@@ -100,7 +117,7 @@ module.exports = {
                 };
                 return resolve(tx);
               } else if (is1155) {
-                const zora1155 = new ethers.Contract(contractAddress, zora1155JSON.abi, provider);
+                const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
                 // calldata for a mint tx
                 const inputs = {
                   "minter": zoraAddresses.base.FIXED_PRICE_SALE_STRATEGY,
@@ -116,11 +133,16 @@ module.exports = {
                 // get the fee from the sales strategy contract
                 const salesStrategy = new ethers.Contract(zoraAddresses.base.FIXED_PRICE_SALE_STRATEGY, zora1155FixedPriceJSON.abi, provider);
                 const salesConfig = await salesStrategy.sale(contractAddress, inputs.tokenId);
-                const fee = salesConfig.pricePerToken;
+                console.log("salesConfig", salesConfig);
+                const price = salesConfig.pricePerToken;
+                console.log("price", price);
+                var fee = await zora1155.mintFee();
+                console.log("fee", fee);
+                // add the price to the fee
+                fee = fee.add(price);
                 console.log("fee", fee);
                 // fee as hex
                 const feeHex = ethers.utils.hexlify(fee);
-                const feeData = await zora1155.sale()
                 const tx = {
                   "chainId": "eip155:8453", // Base chainId
                   "method": "eth_sendTransaction",
