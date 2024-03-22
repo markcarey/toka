@@ -264,4 +264,79 @@ module.exports = {
         }); // return new Promise
     }, // imageFromText
 
+    "frameHTML": async function(frame) {
+        console.log("build html for frame", JSON.stringify(frame));
+        return new Promise(async function(resolve, reject) { 
+            var html = '';
+            var h1 = `https://toka.lol/frames/${frame.id}`;
+            if ("h1" in frame) {
+                h1 = frame.h1;
+            }
+            var buttons = '';
+            var textField = '';
+            // for loop through frame.buttons array
+            if ("buttons" in frame) {
+                for (let i = 0; i < frame.buttons.length; i++) {
+                    buttons += `<meta name="fc:frame:button:${i+1}" content="${frame.buttons[i].label}" />`;
+                    buttons += `<meta name="fc:frame:button:${i+1}:action" content="${frame.buttons[i].action}" />`;
+                    if (frame.buttons[i].action == "link" || frame.buttons[i].action == "tx") {
+                        buttons += `<meta name="fc:frame:button:${i+1}:target" content="${frame.buttons[i].target}" />`;
+                    } // if link or tx
+                } // for
+            } // if buttons
+            var square = "";
+            if ("image" in frame) {
+                // do nothing, assumes image is already a data URI or URL
+            } else {
+                frame.square = true;
+                if ("imageText" in frame) {
+                    frame.image = await util.imageFromText(frame.imageText);
+                } else {
+                    frame.image = await util.imageFromText("404 - Image not found");
+                } // if imageText
+            } // if image
+            if ("textField" in frame) {
+                textField = `<meta name="fc:frame:input:text" content="${frame.textField}" />`;
+            } // if textField
+            console.log("frame.image", frame.image);
+            if ("square" in frame) {
+                if (frame.square == true) {
+                    square = `<meta name="fc:frame:image:aspect_ratio" content="1:1" />`;
+                } // if square
+            } // if square
+            var state = "";
+            if ("state" in frame) {
+                const encodedState = encodeURIComponent(JSON.stringify(frame.state));
+                state = `<meta name="fc:frame:state" content="${encodedState}" />`;
+            }
+            html = `<!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <title>${frame.id}</title>
+                    <meta charSet="utf-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1" />
+                    <meta name="fc:frame" content="vNext" />
+                    <meta name="fc:frame:image" content="${frame.image}" />
+                    <meta name="fc:frame:post_url" content="${frame.postUrl}" />
+                    ${buttons}
+                    ${square}
+                    ${textField}
+                    ${state}
+                    <meta name="og:image" content="${frame.image}" />
+                    <meta name="og:title" content="${frame.id}" />
+                </head>
+
+                <body>
+                    <h1>${h1}</h1>
+                    <div>
+                    <img src="${frame.image}" width="400" />
+                    </div>
+                </body>
+
+                </html>`;
+            //console.log("html", html);
+            return resolve(html);
+        }); // return new Promise
+    } // frameHTML
+
 }; // module.exports

@@ -38,14 +38,15 @@ function abbrAddress(address){
 
 module.exports = {
 
-  "aaaa": async function(req) {
+  "mint": async function(req) {
     return new Promise(async function(resolve, reject) {
       var frame = {};
       frame.id = req.params.id;
       frame.square = true;
-      frame.postUrl = `https://toka.lol/frames/${req.params.id}`;
+      frame.postUrl = `https://toka.lol/collect/base:${req.params.address}`;
 
       const allowed = [8685,234616];
+      var minterAddress;
       // TODO: remove this before launch -- is fid allowed?
       if (!allowed.includes(parseInt(req.body.untrustedData.fid))) {
         frame.imageText = "You are not authorized to use this frame ... yet.";
@@ -57,19 +58,25 @@ module.exports = {
           frame.imageText = "I'm sorry, I couldn't validate this frame.";
           return resolve(frame);
         }
-      }
+        // get the users most recent verified eth address
+        if ("verified_addresses" in frameResult.action.interactor) {
+          if ("eth_addresses" in frameResult.action.interactor.verified_addresses) {
+            minterAddress = frameResult.action.interactor.verified_addresses.eth_addresses[frameResult.action.interactor.verified_addresses.eth_addresses.length-1];
+          }
+        } // if verified_addresses
+      } // if allowed
 
       var contractAddress = "0xae563f1AD15a52A043989c8c31f2ebD621272411"; // default
       var state;
 
       if (req.params.session) {
-        console.log("req.params.session", req.params.session);
-        if (req.params.session == "1") {
+        console.log("req.params.address", req.params.address);
+        if (req.params.address == "1") {
           // no-op
         } else {
           // does it seem like a contract address?
-          if (req.params.session.length == 42) {
-            contractAddress = req.params.session;
+          if (req.params.address.length == 42) {
+            contractAddress = req.params.address;
           }
         }
       }
@@ -99,8 +106,7 @@ module.exports = {
             "target": `https://toka.lol/frames/${req.params.id}`
           }
         ];
-        frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}`
-        frame.postUrl = `https://toka.lol/frames/${req.params.id}/${state.contractAddress}`;
+        frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}`;
         state.contractAddress = contractAddress;
         state.method = "mint";
       } else if (state.method == "mint") {
@@ -119,16 +125,20 @@ module.exports = {
           // return tx data
           // ZoraDrop contract via ethers
           const provider = new ethers.providers.JsonRpcProvider(process.env.API_URL_BASE);
+          if ("address" in req.body.untrustedData) {
+            // connected wallet address
+            minterAddress = req.body.untrustedData.address;
+          }
 
           if (state.contractTye == "ERC721") {
             const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
             // calldata for a mint tx
             const feeHex = state.feeHex;
             const inputs = {
-              "recipient": "0x09A900eB2ff6e9AcA12d4d1a396DdC9bE0307661", // TODO: update this to user's verified eth address
+              "recipient": minterAddress,
               "quantity": 1,
-              "comment": "so Based",
-              "mintReferral": "0x1E58b6ab55cAfD3b6E0c3227844Ff4A011A6ac41" // toka
+              "comment": "so Based", // TODO: collect from inputText, or skip?
+              "mintReferral": process.env.TOKA_ADDRESS
             }
             const calldata = zora721.interface.encodeFunctionData("mintWithRewards", [inputs.recipient, inputs.quantity, inputs.comment, inputs.mintReferral]);
             const tx = {
@@ -147,10 +157,10 @@ module.exports = {
             // calldata for a mint tx
             const inputs = {
               "minter": zoraAddresses.base.FIXED_PRICE_SALE_STRATEGY,
-              "recipient": "0x09A900eB2ff6e9AcA12d4d1a396DdC9bE0307661", // TODO: update this to user's verified eth address
+              "recipient": minterAddress,
               "tokenId": 1, // TODO: update this to the token id
               "quantity": 1,
-              "mintReferral": "0x1E58b6ab55cAfD3b6E0c3227844Ff4A011A6ac41" // toka
+              "mintReferral": process.env.TOKA_ADDRESS
             }
             // convert inputs.recipient to bytes
             const recipientBytes = ethers.utils.defaultAbiCoder.encode(["address"], [inputs.recipient]);
