@@ -68,6 +68,13 @@ module.exports = {
                 const feeData = await zora721.zoraFeeForAmount(1);
                 const fee = feeData.fee;
                 console.log("fee", fee);
+                //now get price
+                const salesConfig = await zora721.salesConfig();
+                console.log("salesConfig", salesConfig);
+                const price = salesConfig.publicSalePrice;
+                console.log("price", price);
+                // add the price to the fee
+                fee = fee.add(price);
                 // fee as hex
                 const feeHex = ethers.utils.hexlify(fee);
                 console.log("feeHex", feeHex);

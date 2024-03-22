@@ -40,7 +40,6 @@ module.exports = {
 
   "mint": async function(req) {
     return new Promise(async function(resolve, reject) {
-      util.logFrame({"custom_id": "mint", "frame_id": "mint", "data": req.body});
       var frame = {};
       frame.id = req.params.id;
       frame.square = true;
@@ -92,6 +91,7 @@ module.exports = {
         };
       }
       console.log("state", state);
+      util.logFrame({"custom_id": state.contractAddress, "frame_id": "mint", "data": req.body});
    
       if (state.method == "start") {
         frame.imageText = "try it";
