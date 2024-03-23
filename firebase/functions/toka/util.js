@@ -54,7 +54,7 @@ module.exports = {
     "hasPermission": async function(state, address) {
         return new Promise(async function(resolve, reject) {
             const provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_BASE});
-            if (state.contractType == "ERC115") {
+            if (state.contractType == "ERC1155") {
                 const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
                 const role = await zora1155.PERMISSION_BIT_MINTER();
                 const bits = await zora1155.permissions(state.tokenId, address);
