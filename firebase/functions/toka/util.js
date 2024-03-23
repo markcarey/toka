@@ -57,7 +57,7 @@ module.exports = {
             if (state.contractType == "ERC1155") {
                 const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
                 const role = await zora1155.PERMISSION_BIT_MINTER();
-                const bits = await zora1155.permissions(state.tokenId, process.env.TOKA1155_ADDRESS);
+                const bits = await zora1155.permissions(0, process.env.TOKA1155_ADDRESS);
                 console.log("bits", bits);
                 if (bits > 0) {
                     state.hasPermission = true;
