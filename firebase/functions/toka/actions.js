@@ -289,11 +289,18 @@ module.exports = {
       if (state.method == "start") {
         frame.imageText = "try it";
         state = await util.getMintPrice(state);
+        state = await util.getDegenMintPrice(state);
         console.log("state after getting mint price", state);
         const price = state.fee;
         // format price in ether
         const priceEther = parseFloat(ethers.utils.formatEther(price)).toFixed(6);
+        const degenPriceEther = parseFloat(ethers.utils.formatEther(state.degenPrice)).toFixed(0);
         frame.buttons = [
+          {
+            "label": `Approve (${degenPriceEther} $DEGEN)`,
+            "action": "tx",
+            "target": `https://toka.lol/collect/base:${state.contractAddress}`
+          },
           {
             "label": `Mint (${priceEther} ETH)`,
             "action": "tx",

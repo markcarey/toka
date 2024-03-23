@@ -73,6 +73,26 @@ module.exports = {
         }); // return new Promise
     }, // hasPermission
 
+    "getDegenMintPrice": async function(state) {
+        const util = module.exports;
+        return new Promise(async function(resolve, reject) {
+            const provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_BASE});
+            // is contract ERC721 or ERC1155?
+            // abi for getDegenMintPrice
+            const abi = [ "function getDegenPricePerToken(adddress nft, uint256 tokenId) external view returns (uint256)" ];
+            var tokaAddress;
+            if (state.contractType == "ERC1155") {
+                tokaAddress = process.env.TOKA1155_ADDRESS;
+            } else if (state.contractType == "ERC721") {
+                tokaAddress = process.env.TOKA721_ADDRESS;
+            }
+            const c = new ethers.Contract(tokaAddress, abi, provider);
+            const price = await c.getDegenPricePerToken(state.contractAddress, state.tokenId);
+            state.degenPrice = price + ethers.utils.parseEther("420");
+            return resolve(state);
+        }); // return new Promise
+    }, // getDegenMintPrice
+
     "getMintPrice": async function(state) {
         const util = module.exports;
         return new Promise(async function(resolve, reject) {
