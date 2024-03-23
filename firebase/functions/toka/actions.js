@@ -97,26 +97,34 @@ module.exports = {
       console.log("state", JSON.stringify(state));
       util.logFrame({"custom_id": state.contractAddress, "frame_id": "admin", "data": req.body});
    
+
       if (state.method == "start") {
         // have they alrewady granted permission?
         state = await util.getMintPrice(state);
         state = await util.hasPermission(state);
         if (state.hasPermission == true) {
+          frame.imageText = `Enter a price in $DEGEN per mint, on top of the 420 mint fee`;
+          frame.textField = "0";
+          frame.buttons = [
+            {
+              "label": "Set Price",
+              "action": "tx",
+              "target": `https://toka.lol/admin/base:${state.contractAddress}`
+            }
+          ];
           state.method = "setPrice";
+        } else {
+          // offer option to enable mintWithDegen with 2 steps: assign permission, set price
+          frame.imageText = "To enable Mint-with-DEGEN, grant minting authorization to Toka";
+          frame.buttons = [
+            {
+              "label": "Authorize",
+              "action": "tx",
+              "target": `https://toka.lol/admin/base:${state.contractAddress}`
+            }
+          ];
+          state.method = "grant";
         }
-      }
-
-      if (state.method == "start") {
-        // offer option to enable mintWithDegen with 2 steps: assign permission, set price
-        frame.imageText = "To enable Mint-with-DEGEN, grant minting authorization to Toka";
-        frame.buttons = [
-          {
-            "label": "Authorize",
-            "action": "tx",
-            "target": `https://toka.lol/admin/base:${state.contractAddress}`
-          }
-        ];
-        state.method = "grant";
       } else if (state.method == "grant") {
         if ("transactionId" in req.body.untrustedData) {
           // transaction completed
@@ -202,9 +210,11 @@ module.exports = {
           }
           // price from inputText
           const price = ethers.utils.parseEther(req.body.untrustedData.inputText);
+          console.log("price", price);
           const tx = {
             "chainId": "eip155:8453", // Base chainId
             "method": "eth_sendTransaction",
+            "attribution": false,
             "params": {
               "to": toka.address,
               "abi": toka.interface.abi,
