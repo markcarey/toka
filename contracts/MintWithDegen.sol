@@ -62,8 +62,23 @@ contract MintWithDegen is AccessControl {
 
     function setDegenPricePerToken1155(IZoraCreator1155 nft, uint256 tokenId, uint256 price) public {
         // require admin permissions on NFT contract
-        require(nft.isAdminOrRole(msg.sender, tokenId, nft.PERMISSION_BIT_MINTER()), "Not admin");
+        require(    nft.isAdminOrRole(msg.sender, tokenId, nft.PERMISSION_BIT_MINTER()) ||
+                    nft.isAdminOrRole(msg.sender, 0, nft.PERMISSION_BIT_MINTER()),
+        "Not admin");
         _degenPricePerToken[address(nft)][tokenId] = price;
+    }
+
+    function _setDegenPricePerToken1155(IZoraCreator1155 nft, uint256 tokenId, uint256 price) public  onlyRole(MANAGER_ROLE){
+        // this will succeed only if the contract has the MINTER role on the NFT contract
+        this.setDegenPricePerToken1155(nft, tokenId, price);
+    }
+
+    function getDegenPricePerToken1155(IZoraCreator1155 nft, uint256 tokenId) public view returns (uint256) {
+        return _degenPricePerToken[address(nft)][tokenId];
+    }
+
+    function getTotalDegenPricePerToken1155(IZoraCreator1155 nft, uint256 tokenId) public view returns (uint256) {
+        return _degenPricePerToken[address(nft)][tokenId] + _mintFee;
     }
 
     // set mint fee function onlyRole(MANAGER_ROLE)
