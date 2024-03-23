@@ -83,6 +83,11 @@ module.exports = {
           }
         }
       }
+      if (req.params.tokenId) {
+        state.tokenId = req.params.tokenId;
+      } else {
+        state.tokenId = 1;
+      }
       
       if ("state" in req.body.untrustedData) {
         state = JSON.parse(decodeURIComponent(req.body.untrustedData.state));
@@ -92,6 +97,15 @@ module.exports = {
       console.log("state", state);
       util.logFrame({"custom_id": state.contractAddress, "frame_id": "admin", "data": req.body});
    
+      if (state.method == "start") {
+        // have they alrewady granted permission?
+        state = await util.getMintPrice(state);
+        state = await util.hasPermission(state, adminAddress);
+        if (state.hasPermission == true) {
+          state.method = "setPrice";
+        }
+      }
+
       if (state.method == "start") {
         // offer option to enable mintWithDegen with 2 steps: assign permission, set price
         frame.imageText = "To enable Mint-with-DEGEN, grant minting authorization to Toka";
@@ -109,7 +123,7 @@ module.exports = {
           const txnId = req.body.untrustedData.transactionId;
           // TODO: handle this
           frame.imageText = `Now set you price in $DEGEN per mint, on top of the 420 mint fee`;
-          frame.inputText = "0";
+          frame.textField = "0";
           frame.buttons = [
             {
               "label": "Set Price",
@@ -121,7 +135,11 @@ module.exports = {
         } else {
           // return tx data
           // the following gets use contractType too
-          state = await util.getMintPrice(state);
+          if ("contractType" in state) {
+            // no-op
+          } else {
+            state = await util.getMintPrice(state);
+          }
           if (state.contractType == "ERC1155") {
             // ZoraDrop contract via ethers
             const provider = new ethers.providers.JsonRpcProvider(process.env.API_URL_BASE);
@@ -240,19 +258,20 @@ module.exports = {
         } else {
           // does it seem like a contract address?
           if (req.params.address.length == 42) {
-            contractAddress = req.params.address;
+            state.contractAddress = req.params.address;
           }
         }
       }
-
+      if (req.params.tokenId) {
+        state.tokenId = req.params.tokenId;
+      } else {
+        state.tokenId = 1;
+      }
       
       if ("state" in req.body.untrustedData) {
         state = JSON.parse(decodeURIComponent(req.body.untrustedData.state));
       } else {
-        state = {
-          "method": "start",
-          "contractAddress": contractAddress
-        };
+        state.method = "start";
       }
       console.log("state", state);
       util.logFrame({"custom_id": state.contractAddress, "frame_id": "mint", "data": req.body});

@@ -25,6 +25,9 @@ const degenJSON = require(__base + 'toka/abis/DEGEN.json');
 const zora721JSON = require(__base + 'toka/abis/ERC721Drop.json');
 const zora1155JSON = require(__base + 'toka/abis/Zora1155.json');
 const zora1155FixedPriceJSON = require(__base + 'toka/abis/Zora1155FixedPrice.json');
+const toka1155JSON = require(__base + 'toka/abis/TokaMint1155.json');
+const toka721JSON = require(__base + 'toka/abis/TokaMint721.json');
+const DEFAULT_ADMIN_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 const zoraAddresses = {
     "base": {
@@ -47,6 +50,28 @@ const sleep = (milliseconds) => {
 };
 
 module.exports = {
+
+    "hasPermission": async function(state, address) {
+        return new Promise(async function(resolve, reject) {
+            const provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_BASE});
+            if (state.contractType == "ERC115") {
+                const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
+                const role = await zora1155.PERMISSION_BIT_MINTER();
+                const bits = await zora1155.permissions(state.tokenId, address);
+                console.log("bits", bits);
+                if (bits > 0) {
+                    state.hasPermission = true;
+                } else {
+                    state.hasPermission = false;
+                }
+            } else if (state.contractType == "ERC721") {
+                const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
+                const hasPermission = await zora721.hasRole(DEFAULT_ADMIN_ROLE, address);
+                state.hasPermission = hasPermission;
+            }
+            return resolve(state);
+        }); // return new Promise
+    }, // hasPermission
 
     "getMintPrice": async function(state) {
         const util = module.exports;
