@@ -137,7 +137,7 @@ module.exports = {
               "params": {
                 "to": zora1155.address,
                 "abi": zora1155JSON.abi,
-                "data": zora1155Contract.interface.encodeFunctionData("addPermission", [0, process.env.TOKA1155_ADDRESS, role])
+                "data": zora1155.interface.encodeFunctionData("addPermission", [0, process.env.TOKA1155_ADDRESS, role])
               }
             };
             return resolve(tx);
@@ -156,7 +156,7 @@ module.exports = {
               "params": {
                 "to": zora721.address,
                 "abi": zora721JSON.abi,
-                "data": zora721Contract.interface.encodeFunctionData("grantRole", [DEFAULT_ADMIN_ROLE, process.env.TOKA721_ADDRESS])
+                "data": zora721.interface.encodeFunctionData("grantRole", [DEFAULT_ADMIN_ROLE, process.env.TOKA721_ADDRESS])
               }
             };
             return resolve(tx);
