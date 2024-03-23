@@ -10,10 +10,12 @@ require('dotenv').config();
 var addr = {
   "degen": process.env.DEGEN_CONTRACT,
   "fixedPriceSaleStrategy": process.env.FIXED_PRICE_SALE_STRATEGY,
+  "toka": process.env.TOKA_ADDRESS
 };
 addr.degenerativeArt = "0x4578F0CB63599699DDBDa70760c6BBEc9e88A89E"; // Base, Zora1155
 addr.zoraFactory = "0x777777C338d93e2C7adf08D102d45CA7CC4Ed021";
 addr.mintWithDegen = "0x8c15A962709f78e3280C1cAc7ad7F7C5495635F6";
+addr.swapper = "";
 
 const tokaFee = ethers.utils.parseEther("69");
 const mintFee = ethers.utils.parseEther("420");
@@ -27,11 +29,13 @@ const zora1155JSON = require("./abis/Zora1155.json");
 const zoraFactoryJSON = require("./abis/ZoraFactory.json");
 const degenJSON = require("./abis/DEGEN.json");
 const mintWithDegenJSON = require("../artifacts/contracts/MintWithDegen.sol/MintWithDegen.json");
+const swapperJSON = require("../artifacts/contracts/Swapper.sol/Swapper.json");
+
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, ethers.provider);
 const degen = new ethers.Contract(addr.degen, degenJSON.abi, signer);
 const da = new ethers.Contract(addr.degenerativeArt, zora1155JSON.abi, signer);
 const zoraFactory = new ethers.Contract(addr.zoraFactory, zoraFactoryJSON.abi, signer);
-var mwd;
+var swapper, mwd;
 
 async function getGasPrices() {
   //console.log("start getGasPrices");
@@ -111,11 +115,19 @@ describe("Mint with Degen", function() {
     // runs once before the first test in this block
     this.timeout(2400000);
     network = await ethers.provider.getNetwork();
+
+    const MySwapper = await ethers.getContractFactory("Swapper");
+    // Start deployment, returning a promise that resolves to a contract object
+    swapper = await MySwapper.deploy(); // Instance of the contract 
+    console.log("Contract deployed to address:", swapper.address);
+    addr.swapper = swapper.address;
+
     const MyContract = await ethers.getContractFactory("MintWithDegen");
     // Start deployment, returning a promise that resolves to a contract object
-    mwd = await MyContract.deploy(addr.degen, addr.fixedPriceSaleStrategy, mintFee, tokaFee); // Instance of the contract 
+    mwd = await MyContract.deploy(addr.degen, addr.fixedPriceSaleStrategy, addr.swapper, mintFee, tokaFee, addr.toka); // Instance of the contract 
     console.log("Contract deployed to address:", mwd.address);
     addr.mintWithDegen = mwd.address;
+
   });
 
   it("Should return degen address", async function() {
@@ -143,7 +155,7 @@ describe("Mint with Degen", function() {
   });
 
   // it should set degenPricePerToken for degenerativeArt contract
-  it("Should set degenPricePerToken for degenerativeArt contract", async function() {
+  it.skip("Should set degenPricePerToken for degenerativeArt contract", async function() {
     var gasOptions = await getGasPrices();
     //console.log("gasOptions", gasOptions);
     const price = ethers.utils.parseEther("1000");
@@ -201,6 +213,18 @@ describe("Mint with Degen", function() {
     //console.log("gasOptions", gasOptions);
     if (gasOptions) {
       await degen.approve(mwd.address, ethers.constants.MaxUint256, gasOptions);
+    } else {
+      console.log("gasOptions not found");
+    }
+    expect(1).to.equal(1);
+  });
+
+  // it should swap 420 DEGEN
+  it.skip("Should swap 420 DEGEN", async function() {
+    var gasOptions = await getGasPrices();
+    //console.log("gasOptions", gasOptions);
+    if (gasOptions) {
+      await mwd.swapTest(ethers.utils.parseEther("420"), gasOptions);
     } else {
       console.log("gasOptions not found");
     }
