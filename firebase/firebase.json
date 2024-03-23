@@ -30,6 +30,10 @@
       {
         "source": "/collect/**",
         "function": "api"
+      },
+      {
+        "source": "/admin/**",
+        "function": "api"
       }
     ]
   },

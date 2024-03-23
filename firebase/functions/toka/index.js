@@ -105,6 +105,19 @@ api.get(['/collect/base[:]:address/:tokenId/:extra', '/collect/base[:]:address/:
     return res.end(html);
 }); // GET /api/collect
 
+api.get(['/admin/base[:]:address/:tokenId/:extra', '/admin/base[:]:address/:tokenId', '/admin/base[:]:address'], async function (req, res) {
+    console.log("start GET /admin with path", req.path);
+    const frame = frames.admin(req);
+    const html = await util.frameHTML(frame);
+    // TODO: update cache when launched
+    res.set('Cache-Control', 'public, max-age=60, s-maxage=120');
+    //res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+    });
+    return res.end(html);
+}); // GET /api/admin
+
 api.post('/api/webhook/mention/:fid', async function (req, res) {
   var fid = req.params.fid;
   console.log("mention webhook req.body", JSON.stringify(req.body));  

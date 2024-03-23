@@ -14,6 +14,8 @@ const degenJSON = require(__base + 'toka/abis/DEGEN.json');
 const zora721JSON = require(__base + 'toka/abis/ERC721Drop.json');
 const zora1155JSON = require(__base + 'toka/abis/Zora1155.json');
 const zora1155FixedPriceJSON = require(__base + 'toka/abis/Zora1155FixedPrice.json');
+const toka1155JSON = require(__base + 'toka/abis/TokaMint1155.json');
+const toka721JSON = require(__base + 'toka/abis/TokaMint721.json');
 
 
 const zoraAddresses = {
@@ -32,11 +34,172 @@ const zoraAddresses = {
   }
 };
 
+const DEFAULT_ADMIN_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
 function abbrAddress(address){
   return address.slice(0,4) + "..." + address.slice(address.length - 4);
 }
 
 module.exports = {
+
+  "admin": async function(req) {
+    return new Promise(async function(resolve, reject) {
+      var frame = {};
+      frame.id = req.params.id;
+      frame.square = true;
+      frame.postUrl = `https://toka.lol/admin/base:${req.params.address}`;
+
+      const allowed = [8685,234616];
+      var adminAddress;
+      // TODO: remove this before launch -- is fid allowed?
+      if (!allowed.includes(parseInt(req.body.untrustedData.fid))) {
+        frame.imageText = "You are not authorized to use this frame ... yet.";
+        return resolve(frame);
+      } else {
+        // validate to check
+        const frameResult = await util.validate(req);
+        if (frameResult.valid == false) {
+          frame.imageText = "I'm sorry, I couldn't validate this frame.";
+          return resolve(frame);
+        }
+        // get the users most recent verified eth address
+        if ("verified_addresses" in frameResult.action.interactor) {
+          if ("eth_addresses" in frameResult.action.interactor.verified_addresses) {
+            adminAddress = frameResult.action.interactor.verified_addresses.eth_addresses[frameResult.action.interactor.verified_addresses.eth_addresses.length-1];
+          }
+        } // if verified_addresses
+      } // if allowed
+
+      var state = {};
+
+      if (req.params.address) {
+        console.log("req.params.address", req.params.address);
+        if (req.params.address == "1") {
+          // no-op
+        } else {
+          // does it seem like a contract address?
+          if (req.params.address.length == 42) {
+            state.contractAddress = req.params.address;
+          }
+        }
+      }
+      
+      if ("state" in req.body.untrustedData) {
+        state = JSON.parse(decodeURIComponent(req.body.untrustedData.state));
+      } else {
+        state.method = "start";
+      }
+      console.log("state", state);
+      util.logFrame({"custom_id": state.contractAddress, "frame_id": "admin", "data": req.body});
+   
+      if (state.method == "start") {
+        // offer option to enable mintWithDegen with 2 steps: assign permission, set price
+        frame.imageText = "To enable Mint-with-DEGEN, grant minting authorization to Toka";
+        frame.buttons = [
+          {
+            "label": "Authorize",
+            "action": "tx",
+            "target": `https://toka.lol/collect/base:${state.contractAddress}`
+          }
+        ];
+        state.method = "grant";
+      } else if (state.method == "grant") {
+        if ("transactionId" in req.body.untrustedData) {
+          // transaction completed
+          const txnId = req.body.untrustedData.transactionId;
+          // TODO: handle this
+          frame.imageText = `Now set you price in $DEGEN per mint, on top of the 420 mint fee`;
+          frame.inputText = "0";
+          frame.buttons = [
+            {
+              "label": "Set Price",
+              "action": "tx",
+              "target": `https://toka.lol/collect/base:${state.contractAddress}`
+            }
+          ];
+          state.method = "setPrice";
+        } else {
+          // return tx data
+          // the following gets use contractType too
+          state = await util.getMintPrice(state);
+          if (state.contractType == "ERC1155") {
+            // ZoraDrop contract via ethers
+            const provider = new ethers.providers.JsonRpcProvider(process.env.API_URL_BASE);
+            if ("address" in req.body.untrustedData) {
+              // connected wallet address
+              adminAddress = req.body.untrustedData.address;
+            }
+            const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
+            const role = zora1155.PERMISSION_BIT_MINTER();
+            const tx = {
+              "chainId": "eip155:8453", // Base chainId
+              "method": "eth_sendTransaction",
+              "params": {
+                "to": zora1155.address,
+                "abi": zora1155JSON.abi,
+                "data": zora1155Contract.interface.encodeFunctionData("addPermission", [0, process.env.TOKA1155_ADDRESS, role])
+              }
+            };
+            return resolve(tx);
+
+          } else if (state.contractType == "ERC721") {
+            // ZoraDrop contract via ethers
+            const provider = new ethers.providers.JsonRpcProvider(process.env.API_URL_BASE);
+            if ("address" in req.body.untrustedData) {
+              // connected wallet address
+              adminAddress = req.body.untrustedData.address;
+            }
+            const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
+            const tx = {
+              "chainId": "eip155:8453", // Base chainId
+              "method": "eth_sendTransaction",
+              "params": {
+                "to": zora721.address,
+                "abi": zora721JSON.abi,
+                "data": zora721Contract.interface.encodeFunctionData("grantRole", [DEFAULT_ADMIN_ROLE, process.env.TOKA721_ADDRESS])
+              }
+            };
+            return resolve(tx);
+          } // if contractType
+
+
+        } // if txnId
+
+      } else if (state.method == "setPrice") {
+        if ("transactionId" in req.body.untrustedData) {
+          // transaction completed
+          const txnId = req.body.untrustedData.transactionId;
+          // TODO: handle this
+          frame.imageText = `Your txId is ${txnId}`;
+        } else {
+          // return tx data
+          // ZoraDrop contract via ethers
+          const provider = new ethers.providers.JsonRpcProvider(process.env.API_URL_BASE);
+          var toka;
+          if (state.contractType == "ERC1155") {
+            toka = new ethers.Contract(process.env.TOKA1155_ADDRESS, toka1155JSON.abi, provider);
+          } else if (state.contractType == "ERC721") {
+            toka = new ethers.Contract(process.env.TOKA721_ADDRESS, toka721JSON.abi, provider);
+          }
+          // price from inputText
+          const price = ethers.utils.parseEther(req.body.untrustedData.inputText);
+          const tx = {
+            "chainId": "eip155:8453", // Base chainId
+            "method": "eth_sendTransaction",
+            "params": {
+              "to": toka.address,
+              "abi": toka.interface.abi,
+              "data": toka.interface.encodeFunctionData("setDegenPricePerToken", [state.contractAddress, 1, price])
+            }
+          };
+          return resolve(tx);
+        } // if txnId
+
+      } // if method
+      frame.state = state;
+      return resolve(frame);
+    }); // return new Promise 
+  }, // admin
 
   "mint": async function(req) {
     return new Promise(async function(resolve, reject) {
