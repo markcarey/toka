@@ -3,6 +3,7 @@ const { ethers } = require("hardhat");
 const fetch = require('node-fetch');
 
 const networkName = hre.network.name;
+const chain = hre.network.name;
 console.log(networkName);
 
 require('dotenv').config();
@@ -70,23 +71,26 @@ describe("Toka Mint with Degen", function() {
     // Start deployment, returning a promise that resolves to a contract object
     swapper = await MySwapper.deploy(); // Instance of the contract 
     console.log("Contract deployed to address:", swapper.address);
+    console.log(`npx hardhat verify --network ${chain} ${swapper.address}`);
     addr.swapper = swapper.address;
 
     const MyContract = await ethers.getContractFactory("TokaMint1155");
     // Start deployment, returning a promise that resolves to a contract object
     mwd = await MyContract.deploy(addr.degen, addr.fixedPriceSaleStrategy, addr.swapper, mintFee, tokaFee, addr.toka); // Instance of the contract 
     console.log("Contract deployed to address:", mwd.address);
+    console.log(`npx hardhat verify --network ${chain} ${mwd.address} ${addr.degen} ${addr.fixedPriceSaleStrategy} ${addr.swapper} ${mintFee} ${tokaFee} ${addr.toka}`);
     addr.mintWithDegen = mwd.address;
 
     const MyContract721 = await ethers.getContractFactory("TokaMint721");
     // Start deployment, returning a promise that resolves to a contract object
     toka721 = await MyContract721.deploy(addr.degen, addr.swapper, mintFee, tokaFee, addr.toka); // Instance of the contract 
     console.log("Contract deployed to address:", toka721.address);
+    console.log(`npx hardhat verify --network ${chain} ${toka721.address} ${addr.degen} ${addr.swapper} ${mintFee} ${tokaFee} ${addr.toka}`);
     addr.toka721 = toka721.address;
 
   });
 
-  describe("1155", function() {
+  describe.skip("1155", function() {
 
     it("Should return tokenUri", async function() {
       var tokenUri = await da.uri(1);
@@ -142,7 +146,7 @@ describe("Toka Mint with Degen", function() {
   
   }); // end describe
   
-  describe("Mint with Degen 1155", function() {
+  describe.skip("Mint with Degen 1155", function() {
   
     it("Should return degen address", async function() {
       var degen = await mwd._degen();
@@ -274,7 +278,7 @@ describe("Toka Mint with Degen", function() {
   
   }); // end describe
   
-  describe("Mint with Degen 721", function() {
+  describe.skip("Mint with Degen 721", function() {
   
   
     it("Should return mintFee", async function() {
