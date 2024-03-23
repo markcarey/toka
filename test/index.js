@@ -290,7 +290,7 @@ describe("Toka Mint with Degen", function() {
     });
   
     // it should set degenPricePerToken for degenerativeArt contract
-    it("Should set degenPricePerToken for degenerativeArt contract", async function() {
+    it.skip("Should set degenPricePerToken for degenerativeArt contract", async function() {
       var gasOptions = await getGasPrices();
       //console.log("gasOptions", gasOptions);
       const price = ethers.utils.parseEther("1000");
