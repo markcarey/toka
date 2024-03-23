@@ -11,6 +11,9 @@ import "./interfaces/IERC721Drop.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
+// console
+import "hardhat/console.sol";
+
 contract MintWithDegen is AccessControl {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     // degen token address on Base:
@@ -35,6 +38,10 @@ contract MintWithDegen is AccessControl {
         _grantRole(MANAGER_ROLE, msg.sender);
     }
 
+    function getSalesStrategy(address nft, uint256 tokenId) public view returns (IZoraCreatorFixedPriceSaleStrategy.SalesConfig memory) {
+        return _fixedPriceSaleStrategy.sale(nft, tokenId);
+    }
+
     //mint function
     function mintWithDegen1155(address to, IZoraCreator1155 nft, uint256 tokenId, uint256 amount) public {
         //get the zora nft contract
@@ -42,22 +49,27 @@ contract MintWithDegen is AccessControl {
         //get the sale strategy
         IZoraCreatorFixedPriceSaleStrategy.SalesConfig memory salesConfig = _fixedPriceSaleStrategy.sale(address(nft), tokenId);
         //check if the sale is a fixed price sale
+        console.log("sale start: %d", salesConfig.saleStart);
         if (salesConfig.saleStart > 0) {
             //check if the sale is still ongoing
             require(block.timestamp >= salesConfig.saleStart && block.timestamp <= salesConfig.saleEnd, "Sale not ongoing");
         }
         // check if amount is less than max tokens per address
-        require(salesConfig.maxTokensPerAddress == 0 || nft.balanceOf(msg.sender, tokenId) + amount <= salesConfig.maxTokensPerAddress, "Max tokens per address reached");
-
+        require(salesConfig.maxTokensPerAddress == 0 || nft.balanceOf(to, tokenId) + amount <= salesConfig.maxTokensPerAddress, "Max tokens per address reached");
+        console.log("after maxTokens");
         //check if the user has enough degen
         //require(_degen.balanceOf(msg.sender) >= salesConfig.pricePerToken * amount, "Not enough degen");
 
         //transfer the degen to the contract
+        console.log("before transferFrom");
         _degen.transferFrom(msg.sender, address(this), ( _mintFee + _degenPricePerToken[address(nft)][tokenId] ) * amount);
+        console.log("after transferFrom");
         //mint the token
         nft.adminMint(to, tokenId, amount, "");
+        console.log("after adminMint");
         // transfer degen and fees
         _degen.transfer(salesConfig.fundsRecipient, _degenPricePerToken[address(nft)][tokenId] * amount);
+        console.log("after transfer recipient");
     }
 
     function setDegenPricePerToken1155(IZoraCreator1155 nft, uint256 tokenId, uint256 price) public {

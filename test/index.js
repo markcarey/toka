@@ -25,9 +25,10 @@ const mintFee = ethers.utils.parseEther("420");
 //const degenJSON = require("../artifacts/contracts/MockDegen.sol/MockDegen.json");
 const zora1155JSON = require("./abis/Zora1155.json");
 const zoraFactoryJSON = require("./abis/ZoraFactory.json");
+const degenJSON = require("./abis/DEGEN.json");
 const mintWithDegenJSON = require("../artifacts/contracts/MintWithDegen.sol/MintWithDegen.json");
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, ethers.provider);
-//const degen = new ethers.Contract(addr.degen, degenJSON.abi, signer);
+const degen = new ethers.Contract(addr.degen, degenJSON.abi, signer);
 const da = new ethers.Contract(addr.degenerativeArt, zora1155JSON.abi, signer);
 const zoraFactory = new ethers.Contract(addr.zoraFactory, zoraFactoryJSON.abi, signer);
 var mwd;
@@ -153,7 +154,7 @@ describe("Mint with Degen", function() {
     }
     expect(1).to.equal(1);
   });
-
+  
   // it should return degenPricePerToken for degenerativeArt contract
   it("Should return degenPricePerToken for degenerativeArt contract", async function() {
     var price = await mwd.getDegenPricePerToken1155(addr.degenerativeArt, 1);
@@ -165,6 +166,70 @@ describe("Mint with Degen", function() {
   it("Should return totalDegenPricePerToken for degenerativeArt contract", async function() {
     var price = await mwd.getTotalDegenPricePerToken1155(addr.degenerativeArt, 1);
     console.log("price", price);
+    expect(1).to.equal(1);
+  });
+
+  // it should impersonate 0x30EEcE78d9ca0F0B9Fa8Db33bC0f6934ac34eF82 and transfer 1,000,000 DEGEN to signer
+  it("Should impersonate 0x30EEcE78d9ca0F0B9Fa8Db33bC0f6934ac34eF82 and transfer 1,000,000 DEGEN to signer", async function() {
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0x30EEcE78d9ca0F0B9Fa8Db33bC0f6934ac34eF82"]}
+    );
+    const impersonatedSigner = await ethers.getSigner("0x30EEcE78d9ca0F0B9Fa8Db33bC0f6934ac34eF82");
+    //const degen = new ethers.Contract(addr.degen, degenJSON.abi, impersonatedSigner);
+    await degen.connect(impersonatedSigner).transfer(signer.address, ethers.utils.parseEther("1000000"));
+    // stop impersonating
+    await hre.network.provider.request({
+      method: "hardhat_stopImpersonatingAccount",
+      params: ["0x30EEcE78d9ca0F0B9Fa8Db33bC0f6934ac34eF82"]}
+    );
+    expect(1).to.equal(1);
+  });
+
+  // it should get salesStrategy for degenerativeArt contract
+  it("Should get salesStrategy for degenerativeArt contract", async function() {
+    var salesStrategy = await mwd.getSalesStrategy(addr.degenerativeArt, 1);
+    console.log("salesStrategy 1", salesStrategy);
+    salesStrategy = await mwd.getSalesStrategy(addr.degenerativeArt, 0);
+    console.log("salesStrategy 0", salesStrategy);
+    expect(1).to.equal(1);
+  });
+
+  // it should approve max spending for degen to mwd
+  it("Should approve max spending for degen to mwd", async function() {
+    var gasOptions = await getGasPrices();
+    //console.log("gasOptions", gasOptions);
+    if (gasOptions) {
+      await degen.approve(mwd.address, ethers.constants.MaxUint256, gasOptions);
+    } else {
+      console.log("gasOptions not found");
+    }
+    expect(1).to.equal(1);
+  });
+
+  // it should grant MINTER role to mwd on degenerativeArt contract
+  it("Should grant MINTER role to mwd on degenerativeArt contract", async function() {
+    var role = await da.PERMISSION_BIT_MINTER();
+    var gasOptions = await getGasPrices();
+    //console.log("gasOptions", gasOptions);
+    if (gasOptions) {
+      var adminSigner = new ethers.Wallet(process.env.PK, ethers.provider);
+      await da.connect(adminSigner).addPermission(0, mwd.address, role, gasOptions);
+    } else {
+      console.log("gasOptions not found");
+    }
+    expect(1).to.equal(1);
+  });
+
+  // it should mint a degenerative art token with Degen
+  it("Should mint a degenerative art token with Degen", async function() {
+    var gasOptions = await getGasPrices();
+    //console.log("gasOptions", gasOptions);
+    if (gasOptions) {
+      await mwd.mintWithDegen1155(process.env.PUBLIC_KEY, addr.degenerativeArt, 1, 1, gasOptions);
+    } else {
+      console.log("gasOptions not found");
+    }
     expect(1).to.equal(1);
   });
 
