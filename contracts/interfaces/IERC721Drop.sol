@@ -31,8 +31,17 @@ interface IERC721Drop {
     /// @return the id of the first minted NFT
     function adminMint(address to, uint256 quantity) external returns (uint256);
 
+    function mintWithRewards(address recipient, uint256 quantity, string calldata comment, address mintReferral) external payable returns (uint256);
+
+    function royaltyInfo(uint256, uint256 _salePrice) external view returns (address receiver, uint256 royaltyAmount);
+
+    function zoraFeeForAmount(uint256 quantity) external view returns (address payable recipient, uint256 fee);
+
     function balanceOf(address account) external view returns (uint256);
 
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
+
+    function hasRole(bytes32 role, address account) external view returns (bool);
+    
 
 }

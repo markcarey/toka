@@ -8,7 +8,7 @@ const tokaFee = ethers.utils.parseEther("69");
 const mintFee = ethers.utils.parseEther("420");
 
 async function main() {
-    const MyContract = await ethers.getContractFactory("MintWithDegen");
+    const MyContract = await ethers.getContractFactory("TokaMint1155");
  
     // Start deployment, returning a promise that resolves to a contract object
     const contract = await MyContract.deploy(addr.degen, addr.fixedPriceSaleStrategy, mintFee, tokaFee); // Instance of the contract 
