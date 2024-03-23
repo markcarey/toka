@@ -90,7 +90,32 @@ api.post(['/collect/base[:]:address/:tokenId/:extra', '/collect/base[:]:address/
     'Content-Type': 'text/html; charset=utf-8',
   });
   return res.end(html);
-}); // POST /frames/:id
+}); // POST /collect
+
+api.post(['/admin/base[:]:address/:tokenId/:extra', '/admin/base[:]:address/:tokenId', '/admin/base[:]:address' ], async function (req, res) {
+    //console.log("body", json.stringify(req.body));
+    //console.log("untrusted", req.body.untrustedData);
+    //console.log("trusted", req.body.trustedData);
+    //console.log("start POST frame with path", req.path);
+    var frame;
+    frame = await actions.admin(req);
+    if ("redirect" in frame) {
+      // this is a 302 redirect so don't respond with a frame
+      return res.redirect(frame.redirect);
+    }
+    if ("chainId" in frame) {
+      // this is actually a transaction json
+      return res.json(frame);
+    }
+    //console.log("frame", JSON.stringify(frame));
+    
+    html = await util.frameHTML(frame);
+    //console.log("html", html);
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+    });
+    return res.end(html);
+  }); // POST /admin/
 
 api.get(['/collect/base[:]:address/:tokenId/:extra', '/collect/base[:]:address/:tokenId', '/collect/base[:]:address'], async function (req, res) {
     console.log("start GET /collect with path", req.path);
