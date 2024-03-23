@@ -259,7 +259,7 @@ module.exports = {
       } // if allowed
 
       var contractAddress = "0xae563f1AD15a52A043989c8c31f2ebD621272411"; // default
-      var state;
+      var state = {};
 
       if (req.params.address) {
         console.log("req.params.address", req.params.address);
