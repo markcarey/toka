@@ -94,13 +94,13 @@ module.exports = {
       } else {
         state.method = "start";
       }
-      console.log("state", state);
+      console.log("state", JSON.stringify(state));
       util.logFrame({"custom_id": state.contractAddress, "frame_id": "admin", "data": req.body});
    
       if (state.method == "start") {
         // have they alrewady granted permission?
         state = await util.getMintPrice(state);
-        state = await util.hasPermission(state, adminAddress);
+        state = await util.hasPermission(state);
         if (state.hasPermission == true) {
           state.method = "setPrice";
         }

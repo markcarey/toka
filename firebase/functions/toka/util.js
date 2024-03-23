@@ -51,13 +51,13 @@ const sleep = (milliseconds) => {
 
 module.exports = {
 
-    "hasPermission": async function(state, address) {
+    "hasPermission": async function(state) {
         return new Promise(async function(resolve, reject) {
             const provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_BASE});
             if (state.contractType == "ERC1155") {
                 const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
                 const role = await zora1155.PERMISSION_BIT_MINTER();
-                const bits = await zora1155.permissions(state.tokenId, address);
+                const bits = await zora1155.permissions(state.tokenId, process.env.TOKA1155_ADDRESS);
                 console.log("bits", bits);
                 if (bits > 0) {
                     state.hasPermission = true;
@@ -66,7 +66,7 @@ module.exports = {
                 }
             } else if (state.contractType == "ERC721") {
                 const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
-                const hasPermission = await zora721.hasRole(DEFAULT_ADMIN_ROLE, address);
+                const hasPermission = await zora721.hasRole(DEFAULT_ADMIN_ROLE, process.env.TOKA721_ADDRESS);
                 state.hasPermission = hasPermission;
             }
             return resolve(state);
@@ -95,7 +95,7 @@ module.exports = {
                 console.log("fee", fee);
                 //now get price
                 const salesConfig = await zora721.salesConfig();
-                console.log("salesConfig", salesConfig);
+                console.log("salesConfig", JSON.stringify(salesConfig));
                 const price = salesConfig.publicSalePrice;
                 console.log("price", price);
                 // add the price to the fee
@@ -112,7 +112,7 @@ module.exports = {
                 // get the fee from the sales strategy contract
                 const salesStrategy = new ethers.Contract(zoraAddresses.base.FIXED_PRICE_SALE_STRATEGY, zora1155FixedPriceJSON.abi, provider);
                 const salesConfig = await salesStrategy.sale(state.contractAddress, state.tokenId ? state.tokenId : 1);
-                console.log("salesConfig", salesConfig);
+                console.log("salesConfig", JSON.stringify(salesConfig));
                 const price = salesConfig.pricePerToken;
                 console.log("price", price);
                 var fee = await zora1155.mintFee();
