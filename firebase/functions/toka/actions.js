@@ -99,7 +99,7 @@ module.exports = {
           {
             "label": "Authorize",
             "action": "tx",
-            "target": `https://toka.lol/collect/base:${state.contractAddress}`
+            "target": `https://toka.lol/admin/base:${state.contractAddress}`
           }
         ];
         state.method = "grant";
@@ -114,7 +114,7 @@ module.exports = {
             {
               "label": "Set Price",
               "action": "tx",
-              "target": `https://toka.lol/collect/base:${state.contractAddress}`
+              "target": `https://toka.lol/admin/base:${state.contractAddress}`
             }
           ];
           state.method = "setPrice";
