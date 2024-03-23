@@ -130,14 +130,15 @@ module.exports = {
               adminAddress = req.body.untrustedData.address;
             }
             const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
-            const role = zora1155.PERMISSION_BIT_MINTER();
+            const role = await zora1155.PERMISSION_BIT_MINTER();
+            console.log("role", role);  
             const tx = {
               "chainId": "eip155:8453", // Base chainId
               "method": "eth_sendTransaction",
               "params": {
                 "to": zora1155.address,
                 "abi": zora1155JSON.abi,
-                "data": zora1155.interface.encodeFunctionData("addPermission", [0, process.env.TOKA1155_ADDRESS, role])
+                "data": zora1155.interface.encodeFunctionData("addPermission", ["0", process.env.TOKA1155_ADDRESS, role])
               }
             };
             return resolve(tx);
