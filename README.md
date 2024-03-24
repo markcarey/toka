@@ -10,7 +10,7 @@ One way to cast Toka Frames, is to take any Zora mint URL and replace `zora.co` 
 
 ### Two ways to Mint with $DEGEN
 - The first way to mint with $DEGEN is when creators explicitly enable their collections for "mint with $DEGEN". To do this they first send a transaction to authorize the Toka minter contract to mint tokens from the collection. Then creators can choose a price in $DEGEN, if desired. Minting happens via the Toka contract, which enforces the mint fee + the price, and then _airdrops_ the NFT to the minter. As such there is no ETH sent to the Zora contract and this no Zora "rewards". But there is a Toka mint fee of 420 $DEGEN -- of that, and rewards of 351 $DEGEN for each NFT minted go immediately to the creator (no need claim).
-![Toka Admin](https://toka.lol/images/toka-enable-mwd.jpg)
+![Toka Admin](https://toka.lol/images/enable-mwd.jpg)
 
 - But you can still "mint with $DEGEN" even if the creator has not (yet!) enabled "Mint with $DEGEN". This permissionless $DEGEN minting is the same from the minter perspective, they approve then mint via the Toka contract. But since the Toka contract has not been authorized to airdrop NFTs to minters, it does the most degen thing it can. It takes the $DEGEN mint fee and swaps it for ETH via Uniswap v3, and then sends the Zora minting fee along with a standard `mintWithRewards()` call to the Zora contract. As such, the Zora mint _is_ paid in ETH and Zora rewards in ETH apply the same way as if the minter has minted from the Zora dapp.
 
