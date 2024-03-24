@@ -51,6 +51,28 @@ const sleep = (milliseconds) => {
 
 module.exports = {
 
+    "hasAllowance": async function(state, address) {
+        return new Promise(async function(resolve, reject) {
+            const provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_BASE});
+            const degen = new ethers.Contract(process.env.DEGEN_CONTRACT, degenJSON.abi, provider);
+            var tokaAddress;
+            if (state.contractType == "ERC1155") {
+                tokaAddress = process.env.TOKA1155_ADDRESS;
+            } else if (state.contractType == "ERC721") {
+                tokaAddress = process.env.TOKA721_ADDRESS;
+            }
+            const allowance = await degen.allowance(address, tokaAddress);
+            console.log("allowance", allowance);
+            state.degenFee = ethers.BigNumber.from(state.degenFeeHex);
+            if (allowance >= state.degenFee) {
+                state.hasAllowance = true;
+            } else {
+                state.hasAllowance = false;
+            }
+            return resolve(state);
+        }); // return new Promise
+    }, // hasAllowance
+
     "hasPermission": async function(state) {
         return new Promise(async function(resolve, reject) {
             const provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_BASE});

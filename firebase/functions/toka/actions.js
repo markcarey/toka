@@ -291,6 +291,7 @@ module.exports = {
         frame.imageText = "try it";
         state = await util.getMintPrice(state);
         state = await util.getDegenMintPrice(state);
+        state = await util.hasAllowance(state, minterAddress);
         console.log("state after getting mint price", state);
         const price = state.fee;
         // format price in ether
@@ -308,6 +309,13 @@ module.exports = {
             "target": `https://toka.lol/collect/base:${state.contractAddress}`
           }
         ];
+        if (state.hasAllowance == true) {
+          frame.buttons[0] = {
+            "label": `Mint (${degenPriceEther} $DEGEN)`,
+            "action": "tx",
+            "target": `https://toka.lol/collect/base:${state.contractAddress}`
+          };
+        }
         frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}`;
         state.method = "mint";
       } else if (state.method == "mint") {
@@ -318,7 +326,7 @@ module.exports = {
             // transaction completed
             const txnId = req.body.untrustedData.transactionId;
             // TODO: nicer image / message
-            frame.imageText = `MInted with ETH. Your txId is ${txnId}`;
+            frame.imageText = `Minted with ETH. Your txId is ${txnId}`;
             frame.buttons = [
               {
                 "label": "Transaction",
@@ -330,7 +338,7 @@ module.exports = {
             // approve degen txn completed
             // transaction completed
             const txnId = req.body.untrustedData.transactionId;
-            if ( state.approvedDegen == true ) {
+            if ( state.hasAllowance == true ) {
               // the txn was actually a mint with Degen
               // TODO: nicer image / message that they can cast to share
               frame.imageText = `Minted with $DEGEN. Your txId is ${txnId}`;
@@ -344,7 +352,7 @@ module.exports = {
               state.method = "minted";
             } else {
               // the txn was actually an approve
-              state.approvedDegen = true;
+              state.hasAllowance = true;
               frame.imageText = `Approved $DEGEN. Your txId is ${txnId}. Now mint.`;
               // get degen fee in ether from state.feeHex
               console.log("state.degenFeeHex", state.degenFeeHex);
@@ -476,7 +484,7 @@ module.exports = {
           if (state.hasPermission == true) {
             // no-op
           } else {
-            value = state.feeHex;
+            //value = state.feeHex;
           }
           const tx = {
             "chainId": "eip155:8453", // Base chainId
