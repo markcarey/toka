@@ -1,4 +1,5 @@
 # Toka
+![Toka](https://toka.lol/images/toka64.png)
 
 ## Mint Zora NFTs completely onframe with $DEGEN or ETH
 Toka Frames enable minting of any Zora NFT by sending a transaction from a Frame, without the need to visit another website or dapp to do the minting. And collectors can use Toka Frames to "mint with $DEGEN" instead of ETH.
