@@ -434,20 +434,44 @@ module.exports = {
               frame.imageText = "I'm sorry, I couldn't validate the contract address.";
             } // if is721
           } else if (req.body.untrustedData.buttonIndex == 1) {
-            // Approve $DEGEN
-            const degen = new ethers.Contract(process.env.DEGEN_CONTRACT, degenJSON.abi, provider);
-            const feeHex = state.degenFeeHex;
-            const tx = {
-              "chainId": "eip155:8453", // Base chainId
-              "method": "eth_sendTransaction",
-              "attribution": false,
-              "params": {
-                "to": degen.address,
-                "abi": degen.interface.abi,
-                "data": degen.interface.encodeFunctionData("approve", [state.tokaAddress, state.degenFeeHex])
+            if (state.hasAllowance == true) {
+              // mint with Degen
+              var abi;
+              if (state.contractType == "ERC1155") {
+                abi = toka1155JSON.abi;
+              } else if (state.contractType == "ERC721") {
+                abi = toka721JSON.abi;
               }
-            };
-            return resolve(tx);
+              const toka = new ethers.Contract(state.tokaAddress, abi, provider);
+              const calldata = toka.interface.encodeFunctionData("mintWithDegen", [minterAddress, state.contractAddress, state.tokenId, 1]);
+              var value = "0x0";
+              const tx = {
+                "chainId": "eip155:8453", // Base chainId
+                "method": "eth_sendTransaction",
+                "params": {
+                  "to": toka.address,
+                  "abi": toka.interface.abi,
+                  "data": calldata,
+                  "value": value
+                }
+              };
+              return resolve(tx);
+            } else {
+              // Approve $DEGEN
+              const degen = new ethers.Contract(process.env.DEGEN_CONTRACT, degenJSON.abi, provider);
+              const feeHex = state.degenFeeHex;
+              const tx = {
+                "chainId": "eip155:8453", // Base chainId
+                "method": "eth_sendTransaction",
+                "attribution": false,
+                "params": {
+                  "to": degen.address,
+                  "abi": degen.interface.abi,
+                  "data": degen.interface.encodeFunctionData("approve", [state.tokaAddress, state.degenFeeHex])
+                }
+              };
+              return resolve(tx);
+            } // if hasAllowance
           } // if buttonIndex
         } // if txnId
       } else if (state.method == "mintWithDegen") {
