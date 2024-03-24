@@ -79,7 +79,7 @@ module.exports = {
             const provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_BASE});
             // is contract ERC721 or ERC1155?
             // abi for getDegenMintPrice
-            const abi = [ "function getDegenPricePerToken(adddress nft, uint256 tokenId) external view returns (uint256)" ];
+            const abi = [ "function getDegenPricePerToken(address nft, uint256 tokenId) external view returns (uint256)" ];
             var tokaAddress;
             if (state.contractType == "ERC1155") {
                 tokaAddress = process.env.TOKA1155_ADDRESS;
