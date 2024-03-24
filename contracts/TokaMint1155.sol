@@ -77,7 +77,7 @@ contract TokaMint1155 is AccessControl {
             nft.adminMint(to, tokenId, amount, "");
             
             // transfer degen to fundsRecipient
-            _degen.transfer(salesConfig.fundsRecipient, _degenPricePerToken[address(nft)][tokenId] * amount);
+            _degen.transfer(salesConfig.fundsRecipient, (_degenPricePerToken[address(nft)][tokenId] + _mintFee - _tokaFee) * amount);
         }
     }
 

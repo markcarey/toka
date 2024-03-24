@@ -74,7 +74,7 @@ contract TokaMint721 is AccessControl {
 
             // transfer degen and fees
             (address recipient, ) = nft.royaltyInfo(1, 1);
-            _degen.transfer(recipient, _degenPricePerToken[address(nft)][tokenId] * amount);
+            _degen.transfer(recipient, (_degenPricePerToken[address(nft)][tokenId] + _mintFee - _tokaFee) * amount);
         }
     }
 
