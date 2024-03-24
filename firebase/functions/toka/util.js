@@ -215,6 +215,24 @@ module.exports = {
         }); // return new Promise
     }, // getFCUserbyAddress
 
+    "sendCast": async function(cast) {
+        const util = module.exports;
+        return new Promise(async function(resolve, reject) {
+            var response = await fetch(`https://api.neynar.com/v2/farcaster/cast`, { 
+                method: 'POST', 
+                headers: {
+                    'Accept': 'application/json', 
+                    'Content-Type': 'application/json',
+                    'Api_key': process.env.NEYNAR_API_KEY
+                },
+                body: JSON.stringify(cast)
+            });
+            var castResult = await response.json();
+            console.log("neynar POST cast", JSON.stringify(castResult));
+            return resolve(castResult);
+        }); // return new Promise
+    }, // sendCast
+
     "getAddressFromFname": async function(fname) {
         const util = module.exports;
         return new Promise(async function(resolve, reject) {
@@ -478,7 +496,8 @@ module.exports = {
             const topic = pubsub.topic('log-frame');
             const messageBody = JSON.stringify(data);
             const buffer = Buffer.from(messageBody);
-            return topic.publishMessage({"data": buffer});
+            topic.publishMessage({"data": buffer});
+            return resolve(1);
         }); // return new Promise
     }, // logFrame
 
@@ -487,7 +506,8 @@ module.exports = {
             const topic = pubsub.topic('webhook');
             const messageBody = JSON.stringify(data);
             const buffer = Buffer.from(messageBody);
-            return topic.publishMessage({"data": buffer});
+            topic.publishMessage({"data": buffer});
+            return resolve(1);
         }); // return new Promise
     }, // logWebhook
 
@@ -496,7 +516,8 @@ module.exports = {
             const topic = pubsub.topic('mint');
             const messageBody = JSON.stringify(data);
             const buffer = Buffer.from(messageBody);
-            return topic.publishMessage({"data": buffer});
+            topic.publishMessage({"data": buffer});
+            return resolve(1);
         }); // return new Promise
     } // logMint
 

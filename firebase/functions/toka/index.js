@@ -25,6 +25,7 @@ const sleep = (milliseconds) => {
 };
 
 const zora721JSON = require(__base + 'toka/abis/ERC721Drop.json');
+const zora1155JSON = require(__base + 'toka/abis/Zora1155.json');
 
 module.exports.created = async function(snap, context) {
   const item = snap.data();
@@ -69,7 +70,7 @@ module.exports.processWebhook = async function(message) {
     const castText = message.json.data.text;
     // TODO: handle the webhook
     // extract the contract address from links like https://zora.co/collect/base:0x4578f0cb63599699ddbda70760c6bbec9e88a89e and https://zora.co/collect/base:0x4578f0cb63599699ddbda70760c6bbec9e88a89e/1
-    var matches = castText.match(/collect\/base:(0x[0-9a-fA-F]{40})/);
+    var matches = castText.match(/zora\.co\/collect\/base:(0x[0-9a-fA-F]{40})/);
     if (!matches) {
         console.log("processWebhook no contract address found");
         return 0;
@@ -77,7 +78,7 @@ module.exports.processWebhook = async function(message) {
     const contractAddress = matches[1];
     console.log("contractAddress", contractAddress);
     var tokenId = "1";
-    matches = castText.match(/collect\/base:(0x[0-9a-fA-F]{40})\/([0-9]+)/);
+    matches = castText.match(/zora\.co\/collect\/base:(0x[0-9a-fA-F]{40})\/([0-9]+)/);
     if (!matches) {
         // no-op
     } else {
@@ -88,10 +89,39 @@ module.exports.processWebhook = async function(message) {
     const user = await util.getUserFromContractAddress(contractAddress);
     console.log("user", user);
     var username;
+    var text = `Mint this NFT completely onframe with $DEGEN or ETH`;
     if (user) {
        username = user.username;
+       text = `Mint this NFT by @${username} completely onframe with $DEGEN or ETH`;
     }
     console.log("username", username);
+    const cast = {
+        "embeds": [
+          {
+            "url": `https://toka.lol/collect/base:${contractAddress}/${tokenId}`,
+          },
+          {
+            "cast_id": {
+              "fid": message.json.data.author.fid,
+              "hash": message.json.data.hash,
+            }
+          }
+        ],
+        "text": text,
+        "signer_uuid": process.env.TOKA_UUID,
+        "channel_id": "toka"
+    };
+    console.log("cast", JSON.stringify(cast));
+    // save it to firestore
+    const castRef = db.collection('casts').doc(contractAddress+tokenId);
+    // does it exist?
+    const doc = await castRef.get();
+    if (doc.exists) {
+        return 1;
+    } else {
+        await castRef.set(cast);
+        await util.sendCast(cast);
+    }
     return 1;
 };
 
@@ -200,13 +230,34 @@ api.post('/api/webhook/:keyword', async function (req, res) {
   return res.json({"result": "ok"});
 }); // POST /api/webhook/:keyword
 
-api.get(['/api/contract/images/base/:address'], async function (req, res) {
+api.get(['/api/contract/images/base/:address', '/api/contract/images/base/:address/:tokenId'], async function (req, res) {
   const address = req.params.address;
   const provider = new ethers.providers.JsonRpcProvider(process.env.API_URL_BASE);
   // contractURI abi
-  const abi = [ "function contractURI() external view returns (string memory)" ];
-  const contract = new ethers.Contract(address, abi, provider);
-  const metadata = await contract.contractURI();
+  var abi;
+  var state = {
+    "contractAddress": address
+  };
+  state = await util.getMintPrice(state);
+  var tokenId = 1;
+  if (req.params.tokenId) {
+    tokenId = parseInt(req.params.tokenId);
+  }
+  var metadata;
+  if (state.contractType == "ERC721") {
+    abi = zora721JSON.abi;
+    const contract = new ethers.Contract(address, abi, provider);
+    metadata = await contract.tokenURI(tokenId);
+  } else if (state.contractType == "ERC1155") {
+    abi = zora1155JSON.abi;
+    const contract = new ethers.Contract(address, abi, provider);
+    metadata = await contract.uri(tokenId);
+  }
+  if (!metadata) {
+    var abi = [ "function contractURI() external view returns (string memory)" ];
+    const contract = new ethers.Contract(address, abi, provider);
+    metadata = await contract.contractURI();
+  }
   console.log("metadata", metadata);
   var image;
   // if metadata starts with "data:application/json;base64," then decode it
@@ -240,7 +291,7 @@ api.get(['/api/contract/images/base/:address'], async function (req, res) {
   let sourceBuffer = Buffer.from(await sourceImage.arrayBuffer());
   //console.log("sourceBuffer", sourceBuffer);
   const img = Buffer.from(sourceBuffer);
-  res.set('Cache-Control', 'public, max-age=60, s-maxage=120');
+  res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
   res.writeHead(200, {
     'Content-Type': mimetype,
     'Content-Length': img.length
@@ -248,10 +299,10 @@ api.get(['/api/contract/images/base/:address'], async function (req, res) {
   return res.end(img);
 }); // GET /api/contract/images/base/:address
 
-api.get('/api/frimg/:address/:imageText.png', async function (req, res) {
+api.get('/api/frimg/:address/:tokenId/:imageText.png', async function (req, res) {
     // url decode imageText
     const imageText = decodeURIComponent(req.params.imageText);
-    const imageUrl = `https://toka.lol/api/contract/images/base/${req.params.address}`
+    const imageUrl = `https://toka.lol/api/contract/images/base/${req.params.address}/${req.params.tokenId}`
     console.log("imageText", imageText);
     const image = await util.tokaImageFromText(imageText, imageUrl)
       .catch((e) => { return res.status(404).send('Not found'); });
@@ -259,6 +310,7 @@ api.get('/api/frimg/:address/:imageText.png', async function (req, res) {
     const img = Buffer.from(image.replace("data:image/png;base64,",""), 'base64');
     // TODO: increase cache
     //res.set('Cache-Control', 'public, max-age=3600, s-maxage=86200');
+    res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
     res.writeHead(200, {
       'Content-Type': 'image/png',
       'Content-Length': img.length

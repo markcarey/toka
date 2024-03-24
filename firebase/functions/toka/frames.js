@@ -16,9 +16,12 @@ module.exports = {
                 "action": "post",
             }
         ];
+        var tokenId = 1;
         if (req.params.tokenId) {
-            frame.postUrl += `/${req.params.tokenId}`;
+            tokenId = req.params.tokenId;
         }
+        frame.postUrl += `/${tokenId}`;
+        frame.image += `/${tokenId}`;
         if (req.params.extra) {
             frame.postUrl += `/${req.params.extra}`;
         }
@@ -38,6 +41,15 @@ module.exports = {
                 "action": "post",
             }
         ];
+        var tokenId = 1;
+        if (req.params.tokenId) {
+            tokenId = req.params.tokenId;
+        }
+        frame.postUrl += `/${tokenId}`;
+        frame.image += `/${tokenId}`;
+        if (req.params.extra) {
+            frame.postUrl += `/${req.params.extra}`;
+        }
         return frame;
     }
 };

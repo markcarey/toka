@@ -49,26 +49,19 @@ module.exports = {
       frame.square = true;
       frame.postUrl = `https://toka.lol/admin/base:${req.params.address}`;
 
-      const allowed = [8685,234616];
       var adminAddress;
-      // TODO: remove this before launch -- is fid allowed?
-      if (!allowed.includes(parseInt(req.body.untrustedData.fid))) {
-        frame.imageText = "You are not authorized to use this frame ... yet.";
+      // validate
+      const frameResult = await util.validate(req);
+      if (frameResult.valid == false) {
+        frame.imageText = "I'm sorry, I couldn't validate this frame.";
         return resolve(frame);
-      } else {
-        // validate to check
-        const frameResult = await util.validate(req);
-        if (frameResult.valid == false) {
-          frame.imageText = "I'm sorry, I couldn't validate this frame.";
-          return resolve(frame);
+      }
+      // get the users most recent verified eth address
+      if ("verified_addresses" in frameResult.action.interactor) {
+        if ("eth_addresses" in frameResult.action.interactor.verified_addresses) {
+          adminAddress = frameResult.action.interactor.verified_addresses.eth_addresses[frameResult.action.interactor.verified_addresses.eth_addresses.length-1];
         }
-        // get the users most recent verified eth address
-        if ("verified_addresses" in frameResult.action.interactor) {
-          if ("eth_addresses" in frameResult.action.interactor.verified_addresses) {
-            adminAddress = frameResult.action.interactor.verified_addresses.eth_addresses[frameResult.action.interactor.verified_addresses.eth_addresses.length-1];
-          }
-        } // if verified_addresses
-      } // if allowed
+      } // if verified_addresses
 
       var state = {};
 
@@ -243,7 +236,7 @@ module.exports = {
       if ("image" in frame) {
         // no-op
       } else {
-        frame.image = `https://toka.lol/api/frimg/${state.contractAddress}/${encodeURIComponent(frame.imageText)}.png`;
+        frame.image = `https://toka.lol/api/frimg/${state.contractAddress}/${state.tokenId}/${encodeURIComponent(frame.imageText)}.png`;
         delete frame.imageText;
       }
       return resolve(frame);
@@ -257,26 +250,19 @@ module.exports = {
       frame.square = true;
       frame.postUrl = `https://toka.lol/collect/base:${req.params.address}`;
 
-      const allowed = [8685,234616];
       var minterAddress;
-      // TODO: remove this before launch -- is fid allowed?
-      if (!allowed.includes(parseInt(req.body.untrustedData.fid))) {
-        frame.imageText = "You are not authorized to use this frame ... yet.";
+      // validate
+      const frameResult = await util.validate(req);
+      if (frameResult.valid == false) {
+        frame.imageText = "I'm sorry, I couldn't validate this frame.";
         return resolve(frame);
-      } else {
-        // validate to check
-        const frameResult = await util.validate(req);
-        if (frameResult.valid == false) {
-          frame.imageText = "I'm sorry, I couldn't validate this frame.";
-          return resolve(frame);
+      }
+      // get the users most recent verified eth address
+      if ("verified_addresses" in frameResult.action.interactor) {
+        if ("eth_addresses" in frameResult.action.interactor.verified_addresses) {
+          minterAddress = frameResult.action.interactor.verified_addresses.eth_addresses[frameResult.action.interactor.verified_addresses.eth_addresses.length-1];
         }
-        // get the users most recent verified eth address
-        if ("verified_addresses" in frameResult.action.interactor) {
-          if ("eth_addresses" in frameResult.action.interactor.verified_addresses) {
-            minterAddress = frameResult.action.interactor.verified_addresses.eth_addresses[frameResult.action.interactor.verified_addresses.eth_addresses.length-1];
-          }
-        } // if verified_addresses
-      } // if allowed
+      } // if verified_addresses
 
       var contractAddress = "0xae563f1AD15a52A043989c8c31f2ebD621272411"; // default
       var state = {};
@@ -320,29 +306,29 @@ module.exports = {
           {
             "label": `Approve (${degenPriceEther} $DEGEN)`,
             "action": "tx",
-            "target": `https://toka.lol/collect/base:${state.contractAddress}`
+            "target": `https://toka.lol/collect/base:${state.contractAddress}/${state.tokenId}`
           },
           {
             "label": `Mint (${priceEther} ETH)`,
             "action": "tx",
-            "target": `https://toka.lol/collect/base:${state.contractAddress}`
+            "target": `https://toka.lol/collect/base:${state.contractAddress}/${state.tokenId}`
           }
         ];
         if (state.hasAllowance == true) {
           frame.buttons[0] = {
             "label": `Mint (${degenPriceEther} $DEGEN)`,
             "action": "tx",
-            "target": `https://toka.lol/collect/base:${state.contractAddress}`
+            "target": `https://toka.lol/collect/base:${state.contractAddress}/${state.tokenId}`
           };
         }
         if (req.params.extra == "admin") {
           frame.buttons.push({
             "label": "Admin",
             "action": "post",
-            "postUrl": `https://toka.lol/admin/base:${state.contractAddress}`
+            "postUrl": `https://toka.lol/admin/base:${state.contractAddress}/${state.tokenId}`
           });
         }
-        frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}`;
+        frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}/${state.tokenId}`;
         state.method = "mint";
       } else if (state.method == "mint") {
         if ("transactionId" in req.body.untrustedData) {
@@ -357,7 +343,7 @@ module.exports = {
               {
                 "label": "Cast it!",
                 "action": "link",
-                "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this. Mint with $DEGEN or ETH completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/1`
+                "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this. Mint with $DEGEN or ETH completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/${state.tokenId}`
               }
             ];
           } else if (req.body.untrustedData.buttonIndex == 1) {
@@ -371,7 +357,7 @@ module.exports = {
                 {
                   "label": "Cast it!",
                   "action": "link",
-                  "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this with $DEGEN completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/1`
+                  "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this with $DEGEN completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/${state.tokenId}`
                 }
               ];
               state.method = "minted";
@@ -388,7 +374,7 @@ module.exports = {
                 {
                   "label": `Mint (${degenPriceEther} $DEGEN)`,
                   "action": "tx",
-                  "target": `https://toka.lol/collect/base:${state.contractAddress}`
+                  "target": `https://toka.lol/collect/base:${state.contractAddress}/${state.tokenId}`
                 }
               ];
               state.method = "mintWithDegen";
@@ -435,7 +421,7 @@ module.exports = {
               const inputs = {
                 "minter": zoraAddresses.base.FIXED_PRICE_SALE_STRATEGY,
                 "recipient": minterAddress,
-                "tokenId": 1, // TODO: update this to the token id
+                "tokenId": state.tokenId,
                 "quantity": 1,
                 "mintReferral": process.env.TOKA_ADDRESS
               }
@@ -509,7 +495,7 @@ module.exports = {
             {
               "label": "Cast it!",
               "action": "link",
-              "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this with $DEGEN completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/1`
+              "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this with $DEGEN completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/${state.tokenId}`
             }
           ];
 
@@ -553,7 +539,7 @@ module.exports = {
       if ("image" in frame) {
         // no-op
       } else {
-        frame.image = `https://toka.lol/api/frimg/${state.contractAddress}/${encodeURIComponent(frame.imageText)}.png`;
+        frame.image = `https://toka.lol/api/frimg/${state.contractAddress}/${state.tokenId}/${encodeURIComponent(frame.imageText)}.png`;
         delete frame.imageText;
       }
       return resolve(frame);
