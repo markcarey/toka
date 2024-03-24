@@ -1,7 +1,6 @@
 # Toka
 
 ## Mint Zora NFTs completely onframe with $DEGEN or ETH
-
 Toka Frames enable minting of any Zora NFT by sending a transaction from a Frame, without the need to visit another website or dapp to do the minting. And collectors can use Toka Frames to "mint with $DEGEN" instead of ETH.
 
 ### Zora NFTs as Transaction Frames
@@ -27,6 +26,32 @@ Whether minting with $DEGEN has been enabled for an NFT ... or not ... minting i
     - `TokaMint1155.sol` - This contract handles minting with $DEGEN for Zora ERC1155 contracts. It enables creators to set a price in $DEGEN for each of the NFTs and enables minters to pay the mint fee in $DEGEN in exchange for the NFT. It also checks that the "minting rules" set by the creator are enforced, such as time-limited minting windows.
     - `TokaMin721.sol` - This contract performs the same functions for Zora ERC721 contracts. These contracts have a different interface, necessitating key differences to interact with the contracts.
     - `Swapper.sol` - This contract gets called by the above Minting contracts when a creator has not (yet!) explicitly enabled "mint with $DEGEN". The Swapper contract has one purpose, to swap $DEGEN for ETH via Uninswap v3 on Base. Since the Zora mint fee must be paid in ETH, do the $DEGEN-to-ETH swap behind the scenes enables the minter to pay in $DEGEN and still get the NFT. Once the swap is complete, the Minter contract call the respective `mintWithRewards()` function on the Zora contracr while send the mint fee (typically 0.000777 ETH) as `value` in the function call. The minter is unaware of the swap -- they just pay a mint fee in $DEGEN and receive an NFT. Without ever leaving the Toka Frame!
+
+### Frame Server(less)
+All Farcaster Frames require a Frame Server to handle POST request from the Frame client. Toka uses Google Firebase (serverless) Functions for the purpose. The primary `api` function serves as  handler for both intial frames -- which are dynamic in nature, different for each NFT -- and for handling the button handlers for both the Mint and Admin frames. The Firebase functions are coded in NodeJS.
+
+Two Google Cloud "pub/sub" functions are used to process certain things in the background:
+- each Frame interaction is logged to Pinata Frame Analytics, pubsub is used to quicly hand off the logging task to background function
+- a Neynar webhook sends a POST every time a zora.com/collect/ URL is casted. These too are passed off from the api endpoint to background process that parses the new casts and then send outs Toka Frames from the @toka account to the /toka channel with newly discovered NFTs that can then be minted with $DEGEN or ETH.
+
+## Sponsor Tech Used
+- `Base` - Toka contracts have been deployed to Base and currently only supports Toka Frame for Zora NFTs on Base. 
+- `Neynar` - Frame validation is performed by Neynar's api, as well as webhooks for new casts, and several other endpoints, such as looking up a user account for the owner/creator of an NFT contracts
+- `Pinata` - Toka logs all Frame interaction to Pinata Frame Analytics. The analytics data will then be used to powered Curation frames that feature the most popular Toka minting frames ... curated into a single Frame you can "scroll" through. (coming soon)
+
+## Next Steps
+- Curation and discovery tools powered by Toka mninting frames
+- NFT collection and publishing via casts and/or Frames, without the need to leave Farcaster to create and deploy NFTs
+- Expansion beyond Zora NFTs to other platforms
+- Toka's own NFT factory for deploying NFT collections
+- Open-Frames / XMTP support
+
+## Contact
+- Farcaster: @markcarey
+- Discord: @markcarey
+- Telegram: @markcarey
+- Twitter: @mthacks
+
 
 
 
