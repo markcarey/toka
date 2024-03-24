@@ -381,7 +381,7 @@ module.exports = {
                     if (frame.buttons[i].action == "link" || frame.buttons[i].action == "tx") {
                         buttons += `<meta name="fc:frame:button:${i+1}:target" content="${frame.buttons[i].target}" />`;
                     } // if link or tx
-                    if ("post_url" in buttons[i]) {
+                    if ("post_url" in frame.buttons[i]) {
                         buttons += `<meta name="fc:frame:button:${i+1}:post_url" content="${frame.buttons[i].post_url}" />`;
                     } // if link or tx
                 } // for
