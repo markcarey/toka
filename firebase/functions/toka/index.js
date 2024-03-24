@@ -247,11 +247,19 @@ api.get(['/api/contract/images/base/:address', '/api/contract/images/base/:addre
   if (state.contractType == "ERC721") {
     abi = zora721JSON.abi;
     const contract = new ethers.Contract(address, abi, provider);
-    metadata = await contract.tokenURI(tokenId);
+    try {
+      metadata = await contract.tokenURI(tokenId);
+    } catch (e) {
+        console.log("tokenURI error", e);
+    }
   } else if (state.contractType == "ERC1155") {
     abi = zora1155JSON.abi;
     const contract = new ethers.Contract(address, abi, provider);
-    metadata = await contract.uri(tokenId);
+    try {
+        metadata = await contract.uri(tokenId);
+    } catch (e) {
+        console.log("uri error", e);
+    }
   }
   if (!metadata) {
     var abi = [ "function contractURI() external view returns (string memory)" ];
