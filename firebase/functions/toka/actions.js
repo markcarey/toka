@@ -479,7 +479,7 @@ module.exports = {
             value = state.feeHex;
           }
           const tx = {
-            "chainId": "eip155:845  3", // Base chainId
+            "chainId": "eip155:8453", // Base chainId
             "method": "eth_sendTransaction",
             "params": {
               "to": c.address,

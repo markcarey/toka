@@ -168,7 +168,8 @@ api.post('/api/webhook/mention/:fid', async function (req, res) {
 }); // POST /api/webhook/:fid
 
 api.post('/api/webhook/:keyword', async function (req, res) {
-  console.log("keyword webhook req.body", JSON.stringify(req.body));  
+  console.log("keyword webhook req.body", JSON.stringify(req.body));
+  await util.logWebhook(req.body);
   return res.json({"result": "ok"});
 }); // POST /api/webhook/:keyword
 
