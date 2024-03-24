@@ -104,7 +104,7 @@ module.exports = {
         state = await util.hasPermission(state);
         if (state.hasPermission == true) {
           frame.imageText = `Enter a price in $DEGEN per mint, on top of the 420 mint fee`;
-          frame.textField = "0";
+          frame.textField = "1";
           frame.buttons = [
             {
               "label": "Set Price",
@@ -132,7 +132,7 @@ module.exports = {
           state.hasPermission = true;
           // TODO: handle this
           frame.imageText = `Now set you price in $DEGEN per mint, on top of the 420 mint fee`;
-          frame.textField = "0";
+          frame.textField = "1";
           frame.buttons = [
             {
               "label": "Set Price",
@@ -212,6 +212,9 @@ module.exports = {
           // price from inputText
           const price = ethers.utils.parseEther(req.body.untrustedData.inputText);
           console.log("price", price);
+          if (price == 0) {
+            price = ethers.utils.parseEther("1");
+          }
           const tx = {
             "chainId": "eip155:8453", // Base chainId
             "method": "eth_sendTransaction",
