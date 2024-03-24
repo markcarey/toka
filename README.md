@@ -1,5 +1,5 @@
-# Toka
 ![Toka](https://toka.lol/images/toka64.png)
+# Toka
 
 ## Mint Zora NFTs completely onframe with $DEGEN or ETH
 Toka Frames enable minting of any Zora NFT by sending a transaction from a Frame, without the need to visit another website or dapp to do the minting. And collectors can use Toka Frames to "mint with $DEGEN" instead of ETH.
@@ -27,15 +27,15 @@ Zora NFTs can be either ERC721 or ERC1155 and this adds complexity due to the di
 ### Toka Contracts on Base
 Whether minting with $DEGEN has been enabled for an NFT ... or not ... minting is done via Toka's contracts that have been deployed to Base:
 
-- `TokaMint1155.sol` - This contract handles minting with $DEGEN for Zora ERC1155 contracts. It enables creators to set a price in $DEGEN for each of the NFTs and enables minters to pay the mint fee in $DEGEN in exchange for the NFT. It also checks that the "minting rules" set by the creator are enforced, such as time-limited minting windows.
-- `TokaMin721.sol` - This contract performs the same functions for Zora ERC721 contracts. These contracts have a different interface, necessitating key differences to interact with the contracts.
-- `Swapper.sol` - This contract gets called by the above Minting contracts when a creator has not (yet!) explicitly enabled "mint with $DEGEN". The Swapper contract has one purpose, to swap $DEGEN for ETH via Uninswap v3 on Base. Since the Zora mint fee must be paid in ETH, do the $DEGEN-to-ETH swap behind the scenes enables the minter to pay in $DEGEN and still get the NFT. Once the swap is complete, the Minter contract call the respective `mintWithRewards()` function on the Zora contracr while send the mint fee (typically 0.000777 ETH) as `value` in the function call. The minter is unaware of the swap -- they just pay a mint fee in $DEGEN and receive an NFT. Without ever leaving the Toka Frame!
+- `TokaMint1155.sol` - This contract handles minting with $DEGEN for Zora ERC1155 contracts. It enables creators to set a price in $DEGEN for each of the NFTs and enables minters to pay the mint fee in $DEGEN in exchange for the NFT. It also checks that the "minting rules" set by the creator are enforced, such as time-limited minting windows. [Base](https://basescan.org/address/0xe215c656e2208482bf4800624c6994d0cf69df28)
+- `TokaMin721.sol` - This contract performs the same functions for Zora ERC721 contracts. These contracts have a different interface, necessitating key differences to interact with the contracts. [Base](https://basescan.org/address/0xc0405a27cf007c885c5179889883ab4ef0636a07)
+- `Swapper.sol` - This contract gets called by the above Minting contracts when a creator has not (yet!) explicitly enabled "mint with $DEGEN". The Swapper contract has one purpose, to swap $DEGEN for ETH via Uninswap v3 on Base. Since the Zora mint fee must be paid in ETH, do the $DEGEN-to-ETH swap behind the scenes enables the minter to pay in $DEGEN and still get the NFT. Once the swap is complete, the Minter contract call the respective `mintWithRewards()` function on the Zora contracr while send the mint fee (typically 0.000777 ETH) as `value` in the function call. The minter is unaware of the swap -- they just pay a mint fee in $DEGEN and receive an NFT. Without ever leaving the Toka Frame! [Base](https://basescan.org/address/0x1caf4794cd36cf4ce6f50cd6e23b2af5bb639321)
 
 ### Frame Server(less)
 All Farcaster Frames require a Frame Server to handle POST request from the Frame client. Toka uses Google Firebase (serverless) Functions for the purpose. The primary `api` function serves as  handler for both intial frames -- which are dynamic in nature, different for each NFT -- and for handling the button handlers for both the Mint and Admin frames. The Firebase functions are coded in NodeJS.
 
 Two Google Cloud "pub/sub" functions are used to process certain things in the background:
-- each Frame interaction is logged to Pinata Frame Analytics, pubsub is used to quicly hand off the logging task to background function
+- each Frame interaction is logged to Pinata Frame Analytics, pubsub is used to quicly hand off the logging task to background function [#](/firebase/functions/toka/index.js#L47)
 - a Neynar webhook sends a POST every time a zora.com/collect/ URL is casted. These too are passed off from the api endpoint to background process that parses the new casts and then send outs Toka Frames from the @toka account to the /toka channel with newly discovered NFTs that can then be minted with $DEGEN or ETH.
 
 ## Sponsor Tech Used
