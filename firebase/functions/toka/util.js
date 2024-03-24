@@ -88,7 +88,7 @@ module.exports = {
             }
             const c = new ethers.Contract(tokaAddress, abi, provider);
             const price = await c.getDegenPricePerToken(state.contractAddress, state.tokenId);
-            state.degenPrice = price + ethers.utils.parseEther("420");
+            state.degenPrice = price.add(ethers.utils.parseEther("420"));
             return resolve(state);
         }); // return new Promise
     }, // getDegenMintPrice
@@ -149,6 +149,26 @@ module.exports = {
             return resolve(state);
         }); // return new Promise
     }, // getMintPrice
+
+    "getUserFromContractAddress": async function(contractAddress) {
+        const util = module.exports;
+        return new Promise(async function(resolve, reject) {
+            const provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_BASE});
+            // abi for owner() returns address
+            const abi = [ "function owner() external view returns (address)" ];
+            const c = new ethers.Contract(contractAddress, abi, provider);
+            const owner = await c.owner();
+            console.log("owner", owner);
+            var user;
+            const users = await util.getFCUserbyAddress([owner]);
+            if (owner in users) {
+                //if (users[address].length == 1) {
+                    user = users[address][0];
+                //}
+            }
+            return resolve(user);
+        }); // return new Promise
+    }, // getUserFromContractAddress
 
     "getFCUserbyAddress": async function(addresses) {
         const util = module.exports;
