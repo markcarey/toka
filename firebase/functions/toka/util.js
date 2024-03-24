@@ -483,6 +483,16 @@ module.exports = {
                     <div>
                     <img src="${frame.image}" width="400" />
                     </div>
+                    <script>
+                        // redirect to zora after 2 seconds
+                        setTimeout(function() {
+                            // take current url and replace toka.lol with zora.co:
+                            const url = window.location.href;
+                            const newUrl = url.replace("toka.lol", "zora.co");
+                            window.location.href = newUrl + '?referrer=${process.env.TOKA_ADDRESS}';
+                        }
+                        , 2000);
+                    </script>
                 </body>
 
                 </html>`;

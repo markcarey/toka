@@ -5,6 +5,10 @@
 Toka Frames enable minting of any Zora NFT by sending a transaction from a Frame, without the need to visit another website or dapp to do the minting. And collectors can use Toka Frames to "mint with $DEGEN" instead of ETH.
 ![Toka Mint Frame](https://toka.lol/images/toka-mint-dog.jpg)
 
+## Video Demo
+
+https://youtu.be/6PUztLiMqIA
+
 ## Try it Now
 The [/toka](https://warpcast.com/~/channel/toka) channel in Warpcast provides multiple Toka Mint Frames that you can try today:
 
