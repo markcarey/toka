@@ -223,5 +223,23 @@ api.get(['/api/contract/images/base/:address'], async function (req, res) {
   return res.end(img);
 }); // GET /api/contract/images/base/:address
 
+api.get('/api/frimg/:address/:imageText.png', async function (req, res) {
+    // url decode imageText
+    const imageText = decodeURIComponent(req.params.imageText);
+    const imageUrl = `https://toka.lol/api/contract/images/base/${req.params.address}`
+    console.log("imageText", imageText);
+    const image = await util.tokaImageFromText(imageText, imageUrl)
+      .catch((e) => { return res.status(404).send('Not found'); });
+    //console.log("image", image);
+    const img = Buffer.from(image.replace("data:image/png;base64,",""), 'base64');
+    // TODO: increase cache
+    //res.set('Cache-Control', 'public, max-age=3600, s-maxage=86200');
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': img.length
+    });
+    return res.end(img);
+}); // GET /api/frimg/:imageText.png
+
 module.exports.api = api;
 

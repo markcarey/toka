@@ -362,6 +362,35 @@ module.exports = {
         }); // return new Promise
     }, // imageFromText
 
+    "tokaImageFromText": async function(text, imageUrl) {
+        return new Promise(async function(resolve, reject) {
+            const nftImage = await getCanvasImage({"url": imageUrl});
+            const textToImage = new UltimateTextToImage(text, {
+                width: 1024,
+                height: 1024,
+                fontSize: 72,
+                lineHeight: 96,
+                bold: 700,
+                fontWeight: 700,
+                marginBottom: 80,
+                marginLeft: 80,
+                marginRight: 80,
+                marginTop: 128 + 40,
+                borderSize: 40,
+                borderColor: "#0833FF",
+                fontFamily: "Inter, Impact",
+                backgroundColor: "#FFFFFF",
+                align: "center",
+                valign: "top",
+                images: [
+                    { canvasImage: nftImage,  layer: 0, repeat: "fit", x: 512 - 128, y: 128, width: 256, height: 256}
+                ]
+            }).render().toBuffer("image/png").toString("base64");
+            console.log(textToImage);
+            return resolve(`data:image/png;base64,${textToImage}`);
+        }); // return new Promise
+    }, // tokaImageFromText
+
     "frameHTML": async function(frame) {
         console.log("build html for frame", JSON.stringify(frame));
         const util = module.exports;

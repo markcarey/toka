@@ -16,6 +16,12 @@ module.exports = {
                 "action": "post",
             }
         ];
+        if (req.params.tokenId) {
+            frame.postUrl += `/${req.params.tokenId}`;
+        }
+        if (req.params.extra) {
+            frame.postUrl += `/${req.params.extra}`;
+        }
         return frame;
     },
 

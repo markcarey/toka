@@ -230,6 +230,12 @@ module.exports = {
 
       } // if method
       frame.state = state;
+      if ("image" in frame) {
+        // no-op
+      } else {
+        frame.image = `https://toka.lol/api/frimg/${state.contractAddress}/${encodeURIComponent(frame.imageText)}.png`;
+        delete frame.imageText;
+      }
       return resolve(frame);
     }); // return new Promise 
   }, // admin
