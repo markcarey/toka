@@ -5,6 +5,18 @@
 Toka Frames enable minting of any Zora NFT by sending a transaction from a Frame, without the need to visit another website or dapp to do the minting. And collectors can use Toka Frames to "mint with $DEGEN" instead of ETH.
 ![Toka Mint Frame](https://toka.lol/images/toka-mint-dog.jpg)
 
+## Try it Now
+The [/toka](https://warpcast.com/~/channel/toka) channel in Warpcast provides multiple Toka Mint Frames that you can try today:
+
+https://warpcast.com/~/channel/toka
+
+You can also take any zora.co mint URL and replace `zora.co` with `toka.lol`.  For example:
+https://zora.co/collect/base:0x82e30a63bccde3724877878a30c4977b52348198/1
+becomes
+https://toka.lol/collect/base:0x82e30a63bccde3724877878a30c4977b52348198/1
+
+To try an "admin frame" replace `collect` with `admin` in the URL, but note that you must be the owner/creator of the collection or the transactions will fail. Only authorized wallets can enable a collection.
+
 ### Zora NFTs as Transaction Frames
 One way to cast Toka Frames, is to take any Zora mint URL and replace `zora.co` with `toka.lol` and cast it. Toka grabs the NFT contract address and tokenId from the Frame URL and uses them ti fetch the metadata and image for the NFT, as well as pricing information. After hitting the inital `Mint` button, the user is presented with options to pay with ETH or $DEGEN. When choosing $DEGEN, first the user send an `approve()` transaction to enable the Toka contract to take the $DEGEN minting fee and then a `mintWithDegen()` transaction to mint the NFT via the Toka minter contract. If then user chooses to mint with ETH, there is one transaction from the frame directly to the Zora contract -- this is essentially the same transaction that users send when minting from the Zora dapp, but with Toka you can mint completely onframe.
 
@@ -13,6 +25,7 @@ One way to cast Toka Frames, is to take any Zora mint URL and replace `zora.co` 
 ![Toka Admin](https://toka.lol/images/enable-mwd.jpg)
 
 - But you can still "mint with $DEGEN" even if the creator has not (yet!) enabled "Mint with $DEGEN". This permissionless $DEGEN minting is the same from the minter perspective, they approve then mint via the Toka contract. But since the Toka contract has not been authorized to airdrop NFTs to minters, it does the most degen thing it can. It takes the $DEGEN mint fee and swaps it for ETH via Uniswap v3, and then sends the Zora minting fee along with a standard `mintWithRewards()` call to the Zora contract. As such, the Zora mint _is_ paid in ETH and Zora rewards in ETH apply the same way as if the minter has minted from the Zora dapp.
+![Mint with DEGEN](https://toka.lol/images/toka-approve-degen.jpg)
 
 ### Frames
 - Mint Frames as mentioned above, enable onframe minting via $DEGEN or ETH
@@ -36,12 +49,12 @@ All Farcaster Frames require a Frame Server to handle POST request from the Fram
 
 Two Google Cloud "pub/sub" functions are used to process certain things in the background:
 - each Frame interaction is logged to Pinata Frame Analytics, pubsub is used to quicly hand off the logging task to background function [#](/firebase/functions/toka/index.js#L47)
-- a Neynar webhook sends a POST every time a zora.com/collect/ URL is casted. These too are passed off from the api endpoint to background process that parses the new casts and then send outs Toka Frames from the @toka account to the /toka channel with newly discovered NFTs that can then be minted with $DEGEN or ETH.
+- a Neynar webhook sends a POST every time a zora.com/collect/ URL is casted. These too are passed off from the api endpoint to background process that parses the new casts and then send outs Toka Frames from the @toka account to the /toka channel with newly discovered NFTs that can then be minted with $DEGEN or ETH. [#](/main/firebase/functions/toka/index.js#L65)
 
 ## Sponsor Tech Used
-- `Base` - Toka contracts have been deployed to Base and currently only supports Toka Frame for Zora NFTs on Base. 
-- `Neynar` - Frame validation is performed by Neynar's api, as well as webhooks for new casts, and several other endpoints, such as looking up a user account for the owner/creator of an NFT contracts
-- `Pinata` - Toka logs all Frame interaction to Pinata Frame Analytics. The analytics data will then be used to powered Curation frames that feature the most popular Toka minting frames ... curated into a single Frame you can "scroll" through. (coming soon)
+- `Base` - Toka contracts have been deployed to Base and currently only supports Toka Frame for Zora NFTs on Base. [#](#toka-contracts-on-base)
+- `Neynar` - Frame validation is performed by Neynar's api, as well as webhooks for new casts, and several other endpoints, such as looking up a user account for the owner/creator of an NFT contracts [#](/firebase/functions/toka/util.js#L178)
+- `Pinata` - Toka logs all Frame interaction to Pinata Frame Analytics. The analytics data will then be used to powered Curation frames that feature the most popular Toka minting frames ... curated into a single Frame you can "scroll" through. (coming soon) [#](/firebase/functions/toka/index.js#L47)
 
 ## Next Steps
 - Curation and discovery tools powered by Toka mninting frames
