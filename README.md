@@ -26,6 +26,7 @@ Zora NFTs can be either ERC721 or ERC1155 and this adds complexity due to the di
 
 ### Toka Contracts on Base
 Whether minting with $DEGEN has been enabled for an NFT ... or not ... minting is done via Toka's contracts that have been deployed to Base:
+
     - `TokaMint1155.sol` - This contract handles minting with $DEGEN for Zora ERC1155 contracts. It enables creators to set a price in $DEGEN for each of the NFTs and enables minters to pay the mint fee in $DEGEN in exchange for the NFT. It also checks that the "minting rules" set by the creator are enforced, such as time-limited minting windows.
     - `TokaMin721.sol` - This contract performs the same functions for Zora ERC721 contracts. These contracts have a different interface, necessitating key differences to interact with the contracts.
     - `Swapper.sol` - This contract gets called by the above Minting contracts when a creator has not (yet!) explicitly enabled "mint with $DEGEN". The Swapper contract has one purpose, to swap $DEGEN for ETH via Uninswap v3 on Base. Since the Zora mint fee must be paid in ETH, do the $DEGEN-to-ETH swap behind the scenes enables the minter to pay in $DEGEN and still get the NFT. Once the swap is complete, the Minter contract call the respective `mintWithRewards()` function on the Zora contracr while send the mint fee (typically 0.000777 ETH) as `value` in the function call. The minter is unaware of the swap -- they just pay a mint fee in $DEGEN and receive an NFT. Without ever leaving the Toka Frame!
