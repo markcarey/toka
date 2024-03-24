@@ -2,4 +2,12 @@
 
 ## Mint Zora NFTs completely onframe with $DEGEN or ETH
 
+Toka Frames enable minting of any Zora NFT by sending a transaction from a Frame, without the need to visit another website or dapp to do the minting. And collectors can use Toka Frames to "mint with $DEGEN" instead of ETH.
 
+### Zora NFTs as Transaction Frames
+One way to cast Toka Frames, is to take any Zora mint URL and replace `zora.co` with `toka.lol` and cast it. Toka grabs the NFT contract address and tokenId from the Frame URL and uses them ti fetch the metadata and image for the NFT, as well as pricing information. After hitting the inital `Mint` button, the user is presented with options to pay with ETH or $DEGEN. When choosing $DEGEN, first the user send an `approve()` transaction to enable the Toka contract to take the $DEGEN minting fee and then a `mintWithDegen()` transaction to mint the NFT via the Toka minter contract. If then user chooses to mint with ETH, there is one transaction from the frame directly to the Zora contract -- this is essentially the same transaction that users send when minting from the Zora dapp, but with Toka you can mint completely onframe.
+
+### Two ways to Mint with $DEGEN
+- The first way to mint with $DEGEN is when creators explicitly enable their collections for "mint with $DEGEN". To do this they first send a transaction to authorize the Toka minter contract to mint tokens from the collection. Then creators can choose a price in $DEGEN, if desired. Minting happens via the Toka contract, which enforces the mint fee + the price, and then _airdrops_ the NFT to the minter. As such there is no ETH sent to the Zora contract and this no Zora "rewards". But there is a Toka mint fee of 420 $DEGEN -- of that, and rewards of 351 $DEGEN for each NFT minted go immediately to the creator (no need claim).
+
+- But you can still "mint with $DEGEN" even if the creator has not (yet!) enabled "Mint with $DEGEN". This permissionless $DEGEN minting is the same from the minter perspective, they approve then mint via the Toka contract. But since the Toka contract has not been authorized to airdrop NFTs to minters, it does the most degen thing it can. It takes the $DEGEN mint fee and swaps it for ETH via Uniswap v3, and then sends the Zora minting fee along with a standard `mintWithRewards()` call to the Zora contract. As such, the Zora mint _is_ paid in ETH and Zora rewards in ETH apply the same way as if the minter has minted from the Zora dapp.
