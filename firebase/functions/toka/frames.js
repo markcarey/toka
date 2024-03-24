@@ -1,30 +1,34 @@
 var firebase = require('firebase-admin');
 
+var util = require(__base + 'toka/util');
+
 module.exports = {
-    "mint":  function(req) {
+    "mint":  function(req, state) {
         const frame = {};
         frame.id = "mint";
         frame.square = true;
         frame.postUrl = `https://toka.lol/collect/base:${req.params.address}`;
-        frame.imageText = "TBD";
+        //frame.imageText = "TBD";
+        frame.image = `https://toka.lol/api/contract/images/base/${req.params.address}`;
         frame.buttons = [
             {
-                "label": "Next",
+                "label": "Mint",
                 "action": "post",
             }
         ];
         return frame;
     },
 
-    "admin":  function(req) {
+    "admin":  function(req, state) {
         const frame = {};
         frame.id = "admin";
         frame.square = true;
         frame.postUrl = `https://toka.lol/admin/base:${req.params.address}`;
-        frame.imageText = "TBD";
+        //frame.imageText = "TBD";
+        frame.image = `https://toka.lol/api/contract/images/base/${req.params.address}`;
         frame.buttons = [
             {
-                "label": "Next",
+                "label": "Admin",
                 "action": "post",
             }
         ];

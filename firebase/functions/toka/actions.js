@@ -319,6 +319,13 @@ module.exports = {
             "target": `https://toka.lol/collect/base:${state.contractAddress}`
           };
         }
+        if (req.params.extra == "admin") {
+          frame.buttons.push({
+            "label": "Admin",
+            "action": "post",
+            "post_url": `https://toka.lol/admin/base:${state.contractAddress}`
+          });
+        }
         frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}`;
         state.method = "mint";
       } else if (state.method == "mint") {

@@ -351,7 +351,7 @@ module.exports = {
                 fontWeight: 700,
                 margin: 80,
                 borderSize: 40,
-                borderColor: "#A36EFD",
+                borderColor: "#0833FF",
                 fontFamily: "Inter, Impact",
                 backgroundColor: "#FFFFFF",
                 align: "center",
@@ -380,6 +380,9 @@ module.exports = {
                     buttons += `<meta name="fc:frame:button:${i+1}:action" content="${frame.buttons[i].action}" />`;
                     if (frame.buttons[i].action == "link" || frame.buttons[i].action == "tx") {
                         buttons += `<meta name="fc:frame:button:${i+1}:target" content="${frame.buttons[i].target}" />`;
+                    } // if link or tx
+                    if ("post_url" in buttons[i]) {
+                        buttons += `<meta name="fc:frame:button:${i+1}:post_url" content="${frame.buttons[i].post_url}" />`;
                     } // if link or tx
                 } // for
             } // if buttons

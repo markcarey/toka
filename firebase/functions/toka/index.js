@@ -137,7 +137,8 @@ api.post(['/admin/base[:]:address/:tokenId/:extra', '/admin/base[:]:address/:tok
 
 api.get(['/collect/base[:]:address/:tokenId/:extra', '/collect/base[:]:address/:tokenId', '/collect/base[:]:address'], async function (req, res) {
     console.log("start GET /collect with path", req.path);
-    const frame = frames.mint(req);
+    const state = {};
+    const frame = frames.mint(req, state);
     const html = await util.frameHTML(frame);
     // TODO: update cache when launched
     res.set('Cache-Control', 'public, max-age=60, s-maxage=120');
@@ -150,7 +151,8 @@ api.get(['/collect/base[:]:address/:tokenId/:extra', '/collect/base[:]:address/:
 
 api.get(['/admin/base[:]:address/:tokenId/:extra', '/admin/base[:]:address/:tokenId', '/admin/base[:]:address'], async function (req, res) {
     console.log("start GET /admin with path", req.path);
-    const frame = frames.admin(req);
+    const state = {};
+    const frame = frames.admin(req, state);
     const html = await util.frameHTML(frame);
     // TODO: update cache when launched
     res.set('Cache-Control', 'public, max-age=60, s-maxage=120');
