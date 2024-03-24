@@ -329,7 +329,7 @@ module.exports = {
           frame.buttons.push({
             "label": "Admin",
             "action": "post",
-            "post_url": `https://toka.lol/admin/base:${state.contractAddress}`
+            "postUrl": `https://toka.lol/admin/base:${state.contractAddress}`
           });
         }
         frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}`;
