@@ -88,7 +88,8 @@ module.exports = {
             }
             const c = new ethers.Contract(tokaAddress, abi, provider);
             const price = await c.getDegenPricePerToken(state.contractAddress, state.tokenId);
-            state.degenPrice = price.add(ethers.utils.parseEther("420"));
+            state.degenFee = price.add(ethers.utils.parseEther("420"));
+            state.degenFeeHex = ethers.utils.hexlify(state.degenFee);
             return resolve(state);
         }); // return new Promise
     }, // getDegenMintPrice
@@ -108,6 +109,7 @@ module.exports = {
 
             if (is721) {
                 state.contractType = "ERC721";
+                state.tokaAddress = process.env.TOKA721_ADDRESS;
                 const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
 
                 const feeData = await zora721.zoraFeeForAmount(1);
@@ -128,6 +130,7 @@ module.exports = {
                 state.feeHex = feeHex;
             } else if (is1155) {
                 state.contractType = "ERC1155";
+                state.tokaAddress = process.env.TOKA1155_ADDRESS;
                 const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
                 // get the fee from the sales strategy contract
                 const salesStrategy = new ethers.Contract(zoraAddresses.base.FIXED_PRICE_SALE_STRATEGY, zora1155FixedPriceJSON.abi, provider);
@@ -421,5 +424,23 @@ module.exports = {
             return topic.publishMessage({"data": buffer});
         }); // return new Promise
     }, // logFrame
+
+    "logWebhook": async function(data) {
+        return new Promise(async function(resolve, reject) {
+            const topic = pubsub.topic('webhook');
+            const messageBody = JSON.stringify(data);
+            const buffer = Buffer.from(messageBody);
+            return topic.publishMessage({"data": buffer});
+        }); // return new Promise
+    }, // logWebhook
+
+    "logMint": async function(data) {
+        return new Promise(async function(resolve, reject) {
+            const topic = pubsub.topic('mint');
+            const messageBody = JSON.stringify(data);
+            const buffer = Buffer.from(messageBody);
+            return topic.publishMessage({"data": buffer});
+        }); // return new Promise
+    } // logMint
 
 }; // module.exports

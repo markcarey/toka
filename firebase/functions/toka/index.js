@@ -61,6 +61,24 @@ module.exports.pinataAnalytics = async function(message) {
     .catch(err => console.error(err));
 } // pinataAnalytics
 
+module.exports.processWebhook = async function(message) {
+    //console.log("PA: processWebhook message", JSON.stringify(message));
+    // Decode the PubSub Message body.
+    const messageBody = message.data ? Buffer.from(message.data, 'base64').toString() : null;
+    // TODO: handle the webhook
+
+    return 1;
+};
+
+module.exports.processMint = async function(message) {
+    //console.log("PA: processMint message", JSON.stringify(message));
+    // Decode the PubSub Message body.
+    const messageBody = message.data ? Buffer.from(message.data, 'base64').toString() : null;
+    // TODO: handle the mint event
+
+    return 1;
+};
+
 api.use(cors({ origin: true })); // enable origin cors
 
 api.get(['/frames/:id', '/frames/:id/:cachebuster'], async function (req, res) {

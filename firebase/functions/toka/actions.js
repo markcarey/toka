@@ -129,6 +129,7 @@ module.exports = {
         if ("transactionId" in req.body.untrustedData) {
           // transaction completed
           const txnId = req.body.untrustedData.transactionId;
+          state.hasPermission = true;
           // TODO: handle this
           frame.imageText = `Now set you price in $DEGEN per mint, on top of the 420 mint fee`;
           frame.textField = "0";
@@ -294,7 +295,7 @@ module.exports = {
         const price = state.fee;
         // format price in ether
         const priceEther = parseFloat(ethers.utils.formatEther(price)).toFixed(6);
-        const degenPriceEther = parseFloat(ethers.utils.formatEther(state.degenPrice)).toFixed(0);
+        const degenPriceEther = parseFloat(ethers.utils.formatEther(state.degenFee)).toFixed(0);
         frame.buttons = [
           {
             "label": `Approve (${degenPriceEther} $DEGEN)`,
@@ -308,21 +309,59 @@ module.exports = {
           }
         ];
         frame.image = `https://toka.lol/api/contract/images/base/${state.contractAddress}`;
-        state.contractAddress = contractAddress;
         state.method = "mint";
       } else if (state.method == "mint") {
         if ("transactionId" in req.body.untrustedData) {
-          // transaction completed
-          const txnId = req.body.untrustedData.transactionId;
-          // TODO: nicer image / message
-          frame.imageText = `Your txId is ${txnId}`;
-          frame.buttons = [
-            {
-              "label": "Transaction",
-              "action": "link",
-              "target": `https://basescan.org/tx/${txnId}`
+          console.log("transactionId buttonIndex", req.body.untrustedData.buttonIndex);
+          if (req.body.untrustedData.buttonIndex == 2) {
+            // mint with eth -- mint txn completed
+            // transaction completed
+            const txnId = req.body.untrustedData.transactionId;
+            // TODO: nicer image / message
+            frame.imageText = `MInted with ETH. Your txId is ${txnId}`;
+            frame.buttons = [
+              {
+                "label": "Transaction",
+                "action": "link",
+                "target": `https://basescan.org/tx/${txnId}`
+              }
+            ];
+          } else if (req.body.untrustedData.buttonIndex == 1) {
+            // approve degen txn completed
+            // transaction completed
+            const txnId = req.body.untrustedData.transactionId;
+            if ( state.approvedDegen == true ) {
+              // the txn was actually a mint with Degen
+              // TODO: nicer image / message that they can cast to share
+              frame.imageText = `Minted with $DEGEN. Your txId is ${txnId}`;
+              frame.buttons = [
+                {
+                  "label": "Transaction",
+                  "action": "link",
+                  "target": `https://basescan.org/tx/${txnId}`
+                }
+              ];
+              state.method = "minted";
+            } else {
+              // the txn was actually an approve
+              state.approvedDegen = true;
+              frame.imageText = `Approved $DEGEN. Your txId is ${txnId}. Now mint.`;
+              // get degen fee in ether from state.feeHex
+              console.log("state.degenFeeHex", state.degenFeeHex);
+              state.degenFee = ethers.BigNumber.from(state.degenFeeHex);
+              console.log("state.degenFee", state.degenFee);
+              const degenPriceEther = parseFloat(ethers.utils.formatEther(state.degenFee)).toFixed(0);
+              frame.buttons = [
+                {
+                  "label": `Mint (${degenPriceEther} $DEGEN)`,
+                  "action": "tx",
+                  "target": `https://toka.lol/collect/base:${state.contractAddress}`
+                }
+              ];
+              state.method = "mintWithDegen";
             }
-          ];
+
+          }
         } else {
           // return tx data
           // ZoraDrop contract via ethers
@@ -332,58 +371,125 @@ module.exports = {
             minterAddress = req.body.untrustedData.address;
           }
 
-          if (state.contractType == "ERC721") {
-            const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
-            // calldata for a mint tx
-            const feeHex = state.feeHex;
-            const inputs = {
-              "recipient": minterAddress,
-              "quantity": 1,
-              "comment": "so Based", // TODO: collect from inputText, or skip?
-              "mintReferral": process.env.TOKA_ADDRESS
-            }
-            const calldata = zora721.interface.encodeFunctionData("mintWithRewards", [inputs.recipient, inputs.quantity, inputs.comment, inputs.mintReferral]);
+          // Mint with ETH - if buttonIndex == 2
+          if (req.body.untrustedData.buttonIndex == 2) {
+
+            if (state.contractType == "ERC721") {
+              const zora721 = new ethers.Contract(state.contractAddress, zora721JSON.abi, provider);
+              // calldata for a mint tx
+              const feeHex = state.feeHex;
+              const inputs = {
+                "recipient": minterAddress,
+                "quantity": 1,
+                "comment": "so Based", // TODO: collect from inputText, or skip?
+                "mintReferral": process.env.TOKA_ADDRESS
+              }
+              const calldata = zora721.interface.encodeFunctionData("mintWithRewards", [inputs.recipient, inputs.quantity, inputs.comment, inputs.mintReferral]);
+              const tx = {
+                "chainId": "eip155:8453", // Base chainId
+                "method": "eth_sendTransaction",
+                "params": {
+                  "to": zora721.address,
+                  "abi": zora721JSON.abi,
+                  "data": calldata,
+                  "value": feeHex
+                }
+              };
+              return resolve(tx);
+            } else if (state.contractType == "ERC1155") {
+              const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
+              // calldata for a mint tx
+              const inputs = {
+                "minter": zoraAddresses.base.FIXED_PRICE_SALE_STRATEGY,
+                "recipient": minterAddress,
+                "tokenId": 1, // TODO: update this to the token id
+                "quantity": 1,
+                "mintReferral": process.env.TOKA_ADDRESS
+              }
+              // convert inputs.recipient to bytes
+              const recipientBytes = ethers.utils.defaultAbiCoder.encode(["address"], [inputs.recipient]);
+              inputs.minterArguments = recipientBytes;
+              const calldata = zora1155.interface.encodeFunctionData("mintWithRewards", [inputs.minter, inputs.tokenId, inputs.quantity, inputs.minterArguments, inputs.mintReferral]);
+              const feeHex = state.feeHex;
+              const tx = {
+                "chainId": "eip155:8453", // Base chainId
+                "method": "eth_sendTransaction",
+                "params": {
+                  "to": zora1155.address,
+                  "abi": zora1155JSON.abi,
+                  "data": calldata,
+                  "value": feeHex
+                }
+              };
+              return resolve(tx);
+            } else {
+              frame.imageText = "I'm sorry, I couldn't validate the contract address.";
+            } // if is721
+          } else if (req.body.untrustedData.buttonIndex == 1) {
+            // Approve $DEGEN
+            const degen = new ethers.Contract(process.env.DEGEN_CONTRACT, degenJSON.abi, provider);
+            const feeHex = state.degenFeeHex;
             const tx = {
               "chainId": "eip155:8453", // Base chainId
               "method": "eth_sendTransaction",
+              "attribution": false,
               "params": {
-                "to": zora721.address,
-                "abi": zora721JSON.abi,
-                "data": calldata,
-                "value": feeHex
+                "to": degen.address,
+                "abi": degen.interface.abi,
+                "data": degen.interface.encodeFunctionData("approve", [state.tokaAddress, state.degenFeeHex])
               }
             };
             return resolve(tx);
-          } else if (state.contractType == "ERC1155") {
-            const zora1155 = new ethers.Contract(state.contractAddress, zora1155JSON.abi, provider);
-            // calldata for a mint tx
-            const inputs = {
-              "minter": zoraAddresses.base.FIXED_PRICE_SALE_STRATEGY,
-              "recipient": minterAddress,
-              "tokenId": 1, // TODO: update this to the token id
-              "quantity": 1,
-              "mintReferral": process.env.TOKA_ADDRESS
-            }
-            // convert inputs.recipient to bytes
-            const recipientBytes = ethers.utils.defaultAbiCoder.encode(["address"], [inputs.recipient]);
-            inputs.minterArguments = recipientBytes;
-            const calldata = zora1155.interface.encodeFunctionData("mintWithRewards", [inputs.minter, inputs.tokenId, inputs.quantity, inputs.minterArguments, inputs.mintReferral]);
-            const feeHex = state.feeHex;
-            const tx = {
-              "chainId": "eip155:8453", // Base chainId
-              "method": "eth_sendTransaction",
-              "params": {
-                "to": zora1155.address,
-                "abi": zora1155JSON.abi,
-                "data": calldata,
-                "value": feeHex
-              }
-            };
-            return resolve(tx);
-          } else {
-            frame.imageText = "I'm sorry, I couldn't validate the contract address.";
-          } // if is721
+          } // if buttonIndex
         } // if txnId
+      } else if (state.method == "mintWithDegen") {
+        if ("transactionId" in req.body.untrustedData) {
+          // transaction completed
+          const txnId = req.body.untrustedData.transactionId;
+          // mint with Degn txn completed
+          frame.imageText = `Minted with $DEGEN. Your txId is ${txnId}`;
+          frame.buttons = [
+            {
+              "label": "Transaction",
+              "action": "link",
+              "target": `https://basescan.org/tx/${txnId}`
+            }
+          ];
+        } else {
+          // return tx data to mint with Degen
+          const provider = new ethers.providers.JsonRpcProvider(process.env.API_URL_BASE);
+          if ("address" in req.body.untrustedData) {
+            // connected wallet address
+            minterAddress = req.body.untrustedData.address;
+          }
+          // abi for mintWithDegen
+          var abi;
+          if (state.contractType == "ERC1155") {
+            abi = toka1155JSON.abi;
+          } else if (state.contractType == "ERC721") {
+            abi = toka721JSON.abi;
+          }
+          const c = new ethers.Contract(state.tokaAddress, abi, provider);
+          const calldata = c.interface.encodeFunctionData("mintWithDegen", [minterAddress, state.contractAddress, state.tokenId, 1]);
+          var value = "0x0";
+          state = await util.hasPermission(state);
+          if (state.hasPermission == true) {
+            // no-op
+          } else {
+            value = state.feeHex;
+          }
+          const tx = {
+            "chainId": "eip155:845  3", // Base chainId
+            "method": "eth_sendTransaction",
+            "params": {
+              "to": c.address,
+              "abi": c.interface.abi,
+              "data": calldata,
+              "value": value
+            }
+          };
+          return resolve(tx);
+        } 
       } // if method
       frame.state = state;
       return resolve(frame);
