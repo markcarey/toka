@@ -64,9 +64,34 @@ module.exports.pinataAnalytics = async function(message) {
 module.exports.processWebhook = async function(message) {
     //console.log("PA: processWebhook message", JSON.stringify(message));
     // Decode the PubSub Message body.
-    const messageBody = message.data ? Buffer.from(message.data, 'base64').toString() : null;
+    //const messageBody = message.data ? Buffer.from(message.data, 'base64').toString() : null;
+    console.log("message.json", JSON.stringify(message.json));
+    const castText = message.json.data.text;
     // TODO: handle the webhook
-
+    // extract the contract address from links like https://zora.co/collect/base:0x4578f0cb63599699ddbda70760c6bbec9e88a89e and https://zora.co/collect/base:0x4578f0cb63599699ddbda70760c6bbec9e88a89e/1
+    var matches = castText.match(/collect\/base:(0x[0-9a-fA-F]{40})/);
+    if (!matches) {
+        console.log("processWebhook no contract address found");
+        return 0;
+    }
+    const contractAddress = matches[1];
+    console.log("contractAddress", contractAddress);
+    var tokenId = "1";
+    matches = castText.match(/collect\/base:(0x[0-9a-fA-F]{40})\/([0-9]+)/);
+    if (!matches) {
+        // no-op
+    } else {
+        tokenId = matches[2];
+    }
+    console.log("tokenId", tokenId);
+    // get user from contractAddress
+    const user = await util.getUserFromContractAddress(contractAddress);
+    console.log("user", user);
+    var username;
+    if (user) {
+       username = user.username;
+    }
+    console.log("username", username);
     return 1;
 };
 

@@ -186,7 +186,8 @@ module.exports = {
             console.log("owner", owner);
             var user;
             const users = await util.getFCUserbyAddress([owner]);
-            if (owner in users) {
+            const address = owner.toLowerCase();
+            if (address in users) {
                 //if (users[address].length == 1) {
                     user = users[address][0];
                 //}
