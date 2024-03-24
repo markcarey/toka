@@ -3,6 +3,7 @@
 
 ## Mint Zora NFTs completely onframe with $DEGEN or ETH
 Toka Frames enable minting of any Zora NFT by sending a transaction from a Frame, without the need to visit another website or dapp to do the minting. And collectors can use Toka Frames to "mint with $DEGEN" instead of ETH.
+![Toka Min Frame](https://toka.lol/images/toka-mint-dog.png)
 
 ### Zora NFTs as Transaction Frames
 One way to cast Toka Frames, is to take any Zora mint URL and replace `zora.co` with `toka.lol` and cast it. Toka grabs the NFT contract address and tokenId from the Frame URL and uses them ti fetch the metadata and image for the NFT, as well as pricing information. After hitting the inital `Mint` button, the user is presented with options to pay with ETH or $DEGEN. When choosing $DEGEN, first the user send an `approve()` transaction to enable the Toka contract to take the $DEGEN minting fee and then a `mintWithDegen()` transaction to mint the NFT via the Toka minter contract. If then user chooses to mint with ETH, there is one transaction from the frame directly to the Zora contract -- this is essentially the same transaction that users send when minting from the Zora dapp, but with Toka you can mint completely onframe.
