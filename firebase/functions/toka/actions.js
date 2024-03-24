@@ -94,6 +94,9 @@ module.exports = {
       } else {
         state.method = "start";
       }
+      if (state.method == "mint") {
+        state.method = "start";
+      }
       console.log("state", JSON.stringify(state));
       util.logFrame({"custom_id": state.contractAddress, "frame_id": "admin", "data": req.body});
    
@@ -131,7 +134,7 @@ module.exports = {
           const txnId = req.body.untrustedData.transactionId;
           state.hasPermission = true;
           // TODO: handle this
-          frame.imageText = `Now set you price in $DEGEN per mint, on top of the 420 mint fee`;
+          frame.imageText = `Set a price in $DEGEN per mint, on top of the 420 $D mint fee (creator gets 351 $D of this)`;
           frame.textField = "1";
           frame.buttons = [
             {
@@ -198,7 +201,14 @@ module.exports = {
           // transaction completed
           const txnId = req.body.untrustedData.transactionId;
           // TODO: handle this
-          frame.imageText = `Your txId is ${txnId}`;
+          frame.imageText = `Mint with $DEGEN has been enabled. Use the button below to cast a mint Frame`;
+          frame.buttons = [
+            {
+              "label": "Cast it!",
+              "action": "link",
+              "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('Use this frame to mint with $DEGEN completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/1`
+            }
+          ];
         } else {
           // return tx data
           // ZoraDrop contract via ethers
@@ -342,12 +352,12 @@ module.exports = {
             // transaction completed
             const txnId = req.body.untrustedData.transactionId;
             // TODO: nicer image / message
-            frame.imageText = `Minted with ETH. Your txId is ${txnId}`;
+            frame.imageText = `Minted with ETH. Trying minting with $DEGEN next time.`;
             frame.buttons = [
               {
-                "label": "Transaction",
+                "label": "Cast it!",
                 "action": "link",
-                "target": `https://basescan.org/tx/${txnId}`
+                "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this. Mint with $DEGEN or ETH completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/1`
               }
             ];
           } else if (req.body.untrustedData.buttonIndex == 1) {
@@ -356,20 +366,19 @@ module.exports = {
             const txnId = req.body.untrustedData.transactionId;
             if ( state.hasAllowance == true ) {
               // the txn was actually a mint with Degen
-              // TODO: nicer image / message that they can cast to share
-              frame.imageText = `Minted with $DEGEN. Your txId is ${txnId}`;
+              frame.imageText = `Minted with $DEGEN. You are truly degen.`;
               frame.buttons = [
                 {
-                  "label": "Transaction",
+                  "label": "Cast it!",
                   "action": "link",
-                  "target": `https://basescan.org/tx/${txnId}`
+                  "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this with $DEGEN completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/1`
                 }
               ];
               state.method = "minted";
             } else {
               // the txn was actually an approve
               state.hasAllowance = true;
-              frame.imageText = `Approved $DEGEN. Your txId is ${txnId}. Now mint.`;
+              frame.imageText = `Approved $DEGEN. Now mint with $DEGEN.`;
               // get degen fee in ether from state.feeHex
               console.log("state.degenFeeHex", state.degenFeeHex);
               state.degenFee = ethers.BigNumber.from(state.degenFeeHex);
@@ -495,14 +504,15 @@ module.exports = {
           // transaction completed
           const txnId = req.body.untrustedData.transactionId;
           // mint with Degn txn completed
-          frame.imageText = `Minted with $DEGEN. Your txId is ${txnId}`;
+          frame.imageText = `Minted with $DEGEN. You are truly degen.`;
           frame.buttons = [
             {
-              "label": "Transaction",
+              "label": "Cast it!",
               "action": "link",
-              "target": `https://basescan.org/tx/${txnId}`
+              "target": `https://warpcast.com/~/compose?text=${encodeURIComponent('I just minted this with $DEGEN completely onframe')}&embeds[]=https://toka.lol/collect/base:${state.contractAddress}/1`
             }
           ];
+
         } else {
           // return tx data to mint with Degen
           const provider = new ethers.providers.JsonRpcProvider(process.env.API_URL_BASE);
@@ -540,6 +550,12 @@ module.exports = {
         } 
       } // if method
       frame.state = state;
+      if ("image" in frame) {
+        // no-op
+      } else {
+        frame.image = `https://toka.lol/api/frimg/${state.contractAddress}/${encodeURIComponent(frame.imageText)}.png`;
+        delete frame.imageText;
+      }
       return resolve(frame);
     }); // return new Promise
   }, // aaaa

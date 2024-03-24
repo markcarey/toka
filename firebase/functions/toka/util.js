@@ -375,7 +375,7 @@ module.exports = {
                 marginBottom: 80,
                 marginLeft: 80,
                 marginRight: 80,
-                marginTop: 128 + 40,
+                marginTop: 128 + 256 + 40,
                 borderSize: 40,
                 borderColor: "#0833FF",
                 fontFamily: "Inter, Impact",
@@ -413,6 +413,7 @@ module.exports = {
                     if ("postUrl" in frame.buttons[i]) {
                         console.log("found postUrl", frame.buttons[i].postUrl );
                         buttons += `<meta name="fc:frame:button:${i+1}:post_url" content="${frame.buttons[i].postUrl}" />`;
+                        buttons += `<meta name="fc:frame:button:${i+1}:target" content="${frame.buttons[i].postUrl}" />`;
                     } // if post_url
                 } // for
             } // if buttons
@@ -466,7 +467,7 @@ module.exports = {
                 </body>
 
                 </html>`;
-            //console.log("html", html);
+            console.log("buttons", buttons);
             return resolve(html);
         }); // return new Promise
     }, // frameHTML
